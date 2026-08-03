@@ -13,6 +13,7 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
+    this.userExplicitlyUnmuted = !videoElement.muted;
     this.boundHandlers = {};
 
     if (!this.init(customContainer)) {
@@ -117,13 +118,25 @@ class InstaPlayerUI {
     this.boundHandlers = {
       playClick: () => {
         if (this.video.paused) {
-          this.video.play().catch(() => {});
+          const promise = this.video.play();
+          if (promise && typeof promise.then === 'function') {
+            promise.then(() => {
+              if (this.userExplicitlyUnmuted && this.video.muted) {
+                this.video.muted = false;
+              }
+            }).catch(() => {});
+          } else {
+            if (this.userExplicitlyUnmuted && this.video.muted) {
+              this.video.muted = false;
+            }
+          }
         } else {
           this.video.pause();
         }
       },
       muteClick: () => {
         this.video.muted = !this.video.muted;
+        this.userExplicitlyUnmuted = !this.video.muted;
       },
       seekerMousedown: () => { this.isUserSeeking = true; },
       seekerTouchstart: () => { this.isUserSeeking = true; },
@@ -162,9 +175,16 @@ class InstaPlayerUI {
           }
         }
       },
-      videoPlay: () => this.updatePlayState(),
+      videoPlay: () => {
+        this.updatePlayState();
+        if (this.userExplicitlyUnmuted && this.video.muted) {
+          this.video.muted = false;
+        }
+      },
       videoPause: () => this.updatePlayState(),
-      videoVolume: () => this.updateMuteState(),
+      videoVolume: () => {
+        this.updateMuteState();
+      },
       videoTime: () => this.updateTimeState(),
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()

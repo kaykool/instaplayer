@@ -80,4 +80,31 @@ describe('Bug Detection & Regression Prevention Tests', () => {
 
     expect(playerUI.host).toBeNull();
   });
+
+  it('Bug Check 6: Preserves user unmuted state when pausing and re-playing (audio mute bug fix)', () => {
+    video.muted = false;
+    const playerUI = new InstaPlayerUI(video);
+    const playBtn = playerUI.elements.playBtn;
+
+    // User is unmuted (sound on)
+    expect(video.muted).toBe(false);
+
+    // Pause video
+    Object.defineProperty(video, 'paused', { value: false, configurable: true });
+    video.pause = vi.fn(() => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+    });
+    playBtn.click(); // Pause
+
+    // Instagram native script forces video.muted = true on play resume
+    video.muted = true;
+
+    // Play again
+    video.play = vi.fn().mockResolvedValue();
+    playBtn.click(); // Play resume
+
+    // Verify unmuted state restored
+    video.dispatchEvent(new Event('play'));
+    expect(video.muted).toBe(false);
+  });
 });

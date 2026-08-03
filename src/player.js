@@ -12,15 +12,19 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
+    this.boundHandlers = {};
 
-    this.init();
+    if (!this.init()) {
+      return;
+    }
+
     this.bindEvents();
     this.updateAllStates();
   }
 
   init() {
     const parent = this.video.parentElement;
-    if (!parent) return;
+    if (!parent) return false;
 
     // Create host container
     this.host = document.createElement('div');
@@ -97,97 +101,117 @@ class InstaPlayerUI {
     }
 
     parent.appendChild(this.host);
+    return true;
   }
 
   bindEvents() {
     const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
 
-    // UI Click Handlers
-    playBtn.addEventListener('click', () => {
-      if (this.video.paused) {
-        this.video.play().catch(() => {});
-      } else {
-        this.video.pause();
-      }
-    });
-
-    muteBtn.addEventListener('click', () => {
-      this.video.muted = !this.video.muted;
-    });
-
-    seeker.addEventListener('mousedown', () => { this.isUserSeeking = true; });
-    seeker.addEventListener('touchstart', () => { this.isUserSeeking = true; }, { passive: true });
-
-    seeker.addEventListener('input', () => {
-      if (this.video.duration) {
-        const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
-        this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
-      }
-    });
-
-    const commitSeek = () => {
-      if (this.video.duration) {
-        this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
-      }
-      this.isUserSeeking = false;
+    // Define bound handlers for cleanup
+    this.boundHandlers = {
+      playClick: () => {
+        if (this.video.paused) {
+          this.video.play().catch(() => {});
+        } else {
+          this.video.pause();
+        }
+      },
+      muteClick: () => {
+        this.video.muted = !this.video.muted;
+      },
+      seekerMousedown: () => { this.isUserSeeking = true; },
+      seekerTouchstart: () => { this.isUserSeeking = true; },
+      seekerInput: () => {
+        if (this.video.duration) {
+          const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
+          this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
+        }
+      },
+      commitSeek: () => {
+        if (this.video.duration) {
+          this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
+        }
+        this.isUserSeeking = false;
+      },
+      speedBtnClick: (e) => {
+        e.stopPropagation();
+        speedMenu.classList.toggle('open');
+      },
+      documentClick: (e) => {
+        if (this.host && !this.host.contains(e.target)) {
+          speedMenu.classList.remove('open');
+        }
+      },
+      fsClick: () => {
+        const targetContainer = this.video.parentElement || this.video;
+        if (!document.fullscreenElement) {
+          if (targetContainer.requestFullscreen) {
+            targetContainer.requestFullscreen();
+          } else if (targetContainer.webkitRequestFullscreen) {
+            targetContainer.webkitRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      },
+      videoPlay: () => this.updatePlayState(),
+      videoPause: () => this.updatePlayState(),
+      videoVolume: () => this.updateMuteState(),
+      videoTime: () => this.updateTimeState(),
+      videoDuration: () => this.updateTimeState(),
+      videoRate: () => this.updateSpeedState()
     };
 
-    seeker.addEventListener('change', commitSeek);
-    seeker.addEventListener('mouseup', commitSeek);
-    seeker.addEventListener('touchend', commitSeek);
+    // UI Listeners
+    playBtn.addEventListener('click', this.boundHandlers.playClick);
+    muteBtn.addEventListener('click', this.boundHandlers.muteClick);
+    seeker.addEventListener('mousedown', this.boundHandlers.seekerMousedown);
+    seeker.addEventListener('touchstart', this.boundHandlers.seekerTouchstart, { passive: true });
+    seeker.addEventListener('input', this.boundHandlers.seekerInput);
+    seeker.addEventListener('change', this.boundHandlers.commitSeek);
+    seeker.addEventListener('mouseup', this.boundHandlers.commitSeek);
+    seeker.addEventListener('touchend', this.boundHandlers.commitSeek);
 
-    speedBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      speedMenu.classList.toggle('open');
-    });
-
+    speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
+    this.speedItemHandlers = [];
     speedItems.forEach((item) => {
-      item.addEventListener('click', () => {
+      const handler = () => {
         const rate = parseFloat(item.dataset.speed);
         this.video.playbackRate = rate;
         speedMenu.classList.remove('open');
-      });
+      };
+      this.speedItemHandlers.push({ item, handler });
+      item.addEventListener('click', handler);
     });
 
-    document.addEventListener('click', (e) => {
-      if (!this.host.contains(e.target)) {
-        speedMenu.classList.remove('open');
-      }
-    });
+    document.addEventListener('click', this.boundHandlers.documentClick);
+    fsBtn.addEventListener('click', this.boundHandlers.fsClick);
 
-    fsBtn.addEventListener('click', () => {
-      const targetContainer = this.video.parentElement || this.video;
-      if (!document.fullscreenElement) {
-        if (targetContainer.requestFullscreen) {
-          targetContainer.requestFullscreen();
-        } else if (targetContainer.webkitRequestFullscreen) {
-          targetContainer.webkitRequestFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
-      }
-    });
-
-    // Video Event Listeners
-    this.video.addEventListener('play', () => this.updatePlayState());
-    this.video.addEventListener('pause', () => this.updatePlayState());
-    this.video.addEventListener('volumechange', () => this.updateMuteState());
-    this.video.addEventListener('timeupdate', () => this.updateTimeState());
-    this.video.addEventListener('durationchange', () => this.updateTimeState());
-    this.video.addEventListener('ratechange', () => this.updateSpeedState());
+    // Video Listeners
+    this.video.addEventListener('play', this.boundHandlers.videoPlay);
+    this.video.addEventListener('pause', this.boundHandlers.videoPause);
+    this.video.addEventListener('volumechange', this.boundHandlers.videoVolume);
+    this.video.addEventListener('timeupdate', this.boundHandlers.videoTime);
+    this.video.addEventListener('durationchange', this.boundHandlers.videoDuration);
+    this.video.addEventListener('ratechange', this.boundHandlers.videoRate);
   }
 
   updatePlayState() {
-    this.elements.playBtn.textContent = this.video.paused ? '▶' : '❚❚';
+    if (this.elements.playBtn) {
+      this.elements.playBtn.textContent = this.video.paused ? '▶' : '❚❚';
+    }
   }
 
   updateMuteState() {
-    this.elements.muteBtn.textContent = this.video.muted ? '🔇' : '🔊';
+    if (this.elements.muteBtn) {
+      this.elements.muteBtn.textContent = this.video.muted ? '🔇' : '🔊';
+    }
   }
 
   updateTimeState() {
+    if (!this.elements.timeLabel) return;
     if (!this.isUserSeeking && this.video.duration) {
       const percent = (this.video.currentTime / this.video.duration) * 100;
       this.elements.seeker.value = percent;
@@ -196,15 +220,18 @@ class InstaPlayerUI {
   }
 
   updateSpeedState() {
+    if (!this.elements.speedBtn) return;
     const rate = this.video.playbackRate;
     this.elements.speedBtn.textContent = `${rate}x`;
-    this.elements.speedItems.forEach((item) => {
-      if (parseFloat(item.dataset.speed) === rate) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
+    if (this.elements.speedItems) {
+      this.elements.speedItems.forEach((item) => {
+        if (parseFloat(item.dataset.speed) === rate) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
   }
 
   updateAllStates() {
@@ -212,5 +239,48 @@ class InstaPlayerUI {
     this.updateMuteState();
     this.updateTimeState();
     this.updateSpeedState();
+  }
+
+  destroy() {
+    if (!this.host) return;
+
+    const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;
+    const h = this.boundHandlers;
+
+    if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
+    if (h.muteClick && muteBtn) muteBtn.removeEventListener('click', h.muteClick);
+    if (seeker) {
+      if (h.seekerMousedown) seeker.removeEventListener('mousedown', h.seekerMousedown);
+      if (h.seekerTouchstart) seeker.removeEventListener('touchstart', h.seekerTouchstart);
+      if (h.seekerInput) seeker.removeEventListener('input', h.seekerInput);
+      if (h.commitSeek) {
+        seeker.removeEventListener('change', h.commitSeek);
+        seeker.removeEventListener('mouseup', h.commitSeek);
+        seeker.removeEventListener('touchend', h.commitSeek);
+      }
+    }
+    if (h.speedBtnClick && speedBtn) speedBtn.removeEventListener('click', h.speedBtnClick);
+    if (this.speedItemHandlers) {
+      this.speedItemHandlers.forEach(({ item, handler }) => {
+        item.removeEventListener('click', handler);
+      });
+    }
+    if (h.documentClick) document.removeEventListener('click', h.documentClick);
+    if (h.fsClick && fsBtn) fsBtn.removeEventListener('click', h.fsClick);
+
+    if (this.video && h.videoPlay) {
+      this.video.removeEventListener('play', h.videoPlay);
+      this.video.removeEventListener('pause', h.videoPause);
+      this.video.removeEventListener('volumechange', h.videoVolume);
+      this.video.removeEventListener('timeupdate', h.videoTime);
+      this.video.removeEventListener('durationchange', h.videoDuration);
+      this.video.removeEventListener('ratechange', h.videoRate);
+    }
+
+    if (this.host.parentElement) {
+      this.host.parentElement.removeChild(this.host);
+    }
+    this.host = null;
+    this.shadow = null;
   }
 }

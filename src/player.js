@@ -164,16 +164,15 @@ class InstaPlayerUI {
       }
     };
 
-    // Bubble-phase event traps on host to stop events from escaping to Instagram outer container
+    // Host event traps using composedPath to accurately unmask retargeted Shadow DOM elements
     ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
       this.host.addEventListener(evtType, (e) => {
-        // Do not call preventDefault on input[type="range"] mousedown/touchstart/pointerdown so slider can drag
-        if (e && e.target && e.target.classList && e.target.classList.contains('ip-seeker')) {
-          if (evtType === 'click') {
-            stopEvt(e);
-          } else {
-            stopEvtNoPrevent(e);
-          }
+        const path = e.composedPath ? e.composedPath() : [];
+        const realTarget = path[0] || e.target;
+        const isSeeker = realTarget && realTarget.classList && realTarget.classList.contains('ip-seeker');
+
+        if (isSeeker) {
+          stopEvtNoPrevent(e);
         } else {
           stopEvt(e);
         }
@@ -229,7 +228,7 @@ class InstaPlayerUI {
         this.isUserSeeking = false;
       },
       seekerClick: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
       },
       speedBtnClick: (e) => {
         stopEvt(e);

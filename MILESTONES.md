@@ -11,7 +11,7 @@ This document outlines the step-by-step development roadmap for building, testin
 | **M1: Foundation & Extension Boilerplate** | Setup & Manifest V3 configuration | `manifest.json`, icon assets, project scaffolding | Day 1 |
 | **M2: Dynamic DOM Injection Engine** | Instagram SPA video detection | MutationObserver, wrapper injection, Shadow DOM isolation | Day 2 |
 | **M3: Bare-Minimum Player Overlay UI** | Minimal, flat high-contrast layout | Simple control bar layout, progress bar, high-contrast icons, speed popup | Day 3 |
-| **M4: Media Event Sync & Interactive Logic** | HTML5 Video API bindings | Play/Pause, Seek, Mute, Volume, Fast Forward (+5s), Speed menu, Fullscreen | Day 4 |
+| **M4: Media Event Sync & Interactive Logic** | HTML5 Video API bindings | Play/Pause, Seek, Mute, Volume, Speed menu, Fullscreen | Day 4 |
 | **M5: Multi-Context Instagram Testing & Polish** | Cross-view testing & edge cases | Reels, Feed carousels, Explore modal, Stories support | Day 5 |
 | **M6: Packaging & Store Readiness** | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 |
 
@@ -55,11 +55,11 @@ This document outlines the step-by-step development roadmap for building, testin
 ### Milestone 3: Bare-Minimum Player Overlay UI
 - [ ] Design minimal, flat CSS layout in `shadow-styles.css`:
   - Solid dark semi-transparent background (`background: rgba(0, 0, 0, 0.75);`).
-  - High-contrast SVG vector icons for Play, Pause, Mute, Forward 5s, Speed, and Fullscreen.
+  - High-contrast SVG vector icons for Play, Pause, Mute, Speed, and Fullscreen.
 - [ ] Build HTML template generator for control bar elements inside Shadow Root:
   - Left section: Play/Pause button, Mute button, Time label (`0:00 / 0:00`).
   - Center section: Progress bar track, fill, and interactive thumb handle.
-  - Right section: `+5s` button, `Speed` popup trigger button, Fullscreen button.
+  - Right section: `Speed` popup trigger button, Fullscreen button.
 - [ ] Build minimal floating Speed Popup menu:
   - Clean vertical list with preset speeds (`0.25x` to `3x`).
 
@@ -75,7 +75,6 @@ This document outlines the step-by-step development roadmap for building, testin
   - Play/Pause click -> calls `video.play()` / `video.pause()`.
   - Mute click -> toggles `video.muted`.
   - Progress bar seek (click & drag) -> sets `video.currentTime`.
-  - Forward 5s click -> adjusts `video.currentTime + 5`.
   - Speed preset menu selection -> sets `video.playbackRate`.
   - Fullscreen click -> triggers `wrapper.requestFullscreen()`.
 

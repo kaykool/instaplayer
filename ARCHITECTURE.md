@@ -104,7 +104,6 @@ sequenceDiagram
 | Click Play/Pause Button | `onPlayPauseClick()` | `video.paused ? video.play() : video.pause()` | `play` / `pause` updates UI icon |
 | Click Mute Button | `onMuteClick()` | `video.muted = !video.muted` | `volumechange` updates UI Mute icon |
 | Drag Progress Bar | `onSeekInput(val)` | `video.currentTime = (val / 100) * video.duration` | `timeupdate` moves progress thumb |
-| Click `+5s` | `onSkipForward(5)` | `video.currentTime += 5` | `timeupdate` updates time text |
 | Click Speed Preset | `onSpeedSelect(rate)` | `video.playbackRate = rate` | UI speed button text updates to `rate + 'x'` |
 | Click Fullscreen | `onFullscreenClick()` | `wrapper.requestFullscreen()` | Fullscreen state toggles |
 

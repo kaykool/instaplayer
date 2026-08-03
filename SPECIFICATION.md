@@ -1,7 +1,7 @@
 # InstaPlayer - Chrome Extension Specification
 
 ## 1. Overview
-**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, audio muting, skip forward, and fullscreen controls without visual distraction.
+**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, audio muting, and fullscreen controls without visual distraction.
 
 ---
 
@@ -30,7 +30,7 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 |                                                                                               |
 |                                                                                               |
 | +-------------------------------------------------------------------------------------------+ |
-| | [> / ||]  [Vol]  0:35 / 0:35  [===================o================]     5↻   [1x]  [FS]  | |
+| | [> / ||]  [Vol]  0:35 / 0:35  [===================o================]         [1x]    [FS] | |
 | +-------------------------------------------------------------------------------------------+ |
 +-----------------------------------------------------------------------------------------------+
 ```
@@ -71,16 +71,13 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 * **Scrubber Thumb**: Compact 10px circular white thumb indicator for easy scrubbing.
 * **Interaction**: Click or drag to jump to target timestamp (`video.currentTime = seekPercentage * video.duration`).
 
-### 4.5 Skip Forward 5 Seconds (`5↻`)
-* **Interaction**: Click advances 5 seconds (`video.currentTime = Math.min(video.duration, video.currentTime + 5)`).
-
-### 4.6 Playback Speed Control (`[1x]`)
+### 4.5 Playback Speed Control (`[1x]`)
 * **Active Indicator**: Button displays current playback speed label (e.g., `1x`, `1.5x`, `2x`).
 * **Interaction**: Click opens a clean, minimal popup preset menu.
 * **Speed Presets**: `0.25x`, `0.5x`, `0.75x`, `1x` (Default), `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`.
 * **Behavior**: Selecting an option updates `video.playbackRate` immediately.
 
-### 4.7 Fullscreen Toggle (`[⛶]`)
+### 4.6 Fullscreen Toggle (`[⛶]`)
 * **Interaction**: Toggles fullscreen mode for the parent video wrapper (`wrapper.requestFullscreen()` / `document.exitFullscreen()`).
 
 ---

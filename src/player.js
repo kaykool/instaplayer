@@ -5,8 +5,9 @@
 class InstaPlayerUI {
   /**
    * @param {HTMLVideoElement} videoElement
+   * @param {HTMLElement} [customContainer]
    */
-  constructor(videoElement) {
+  constructor(videoElement, customContainer = null) {
     this.video = videoElement;
     this.host = null;
     this.shadow = null;
@@ -14,7 +15,7 @@ class InstaPlayerUI {
     this.isUserSeeking = false;
     this.boundHandlers = {};
 
-    if (!this.init()) {
+    if (!this.init(customContainer)) {
       return;
     }
 
@@ -22,8 +23,13 @@ class InstaPlayerUI {
     this.updateAllStates();
   }
 
-  init() {
-    const parent = this.video.parentElement;
+  /**
+   * Initialize Shadow DOM host and attach overlay
+   * @param {HTMLElement} [customContainer]
+   * @returns {boolean} Success status
+   */
+  init(customContainer) {
+    const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
     // Create host container
@@ -143,7 +149,7 @@ class InstaPlayerUI {
         }
       },
       fsClick: () => {
-        const targetContainer = this.video.parentElement || this.video;
+        const targetContainer = this.host.parentElement || this.video.parentElement || this.video;
         if (!document.fullscreenElement) {
           if (targetContainer.requestFullscreen) {
             targetContainer.requestFullscreen();

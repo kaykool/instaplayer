@@ -40,22 +40,22 @@ class InstaPlayerUI {
     // Attach Shadow DOM root
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    // Inject styles (z-index 2147483647 guarantees top layer over Instagram overlays)
+    // Inject styles with max z-index and explicit pointer-events
     const style = document.createElement('style');
     style.textContent = `
-      :host { display: block; position: absolute; bottom: 0; left: 0; right: 0; width: 100%; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
-      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative; z-index: 2147483647; }
-      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; }
+      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
       .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
-      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; }
-      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; pointer-events: auto !important; }
-      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; pointer-events: auto !important; }
+      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; cursor: pointer; }
-      .ip-speed-wrapper { position: relative; pointer-events: auto !important; }
-      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647; min-width: 64px; pointer-events: auto !important; }
+      .ip-speed-wrapper { position: relative !important; pointer-events: auto !important; z-index: 2147483647 !important; }
+      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
       .ip-speed-menu.open { display: block; }
-      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; }
+      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-speed-item:hover { background: rgba(255, 255, 255, 0.15); }
       .ip-speed-item.active { font-weight: bold; color: #3897f0; }
     `;
@@ -117,10 +117,15 @@ class InstaPlayerUI {
     // Helper to stop event propagation so Instagram click-to-pause handlers do not intercept control clicks
     const stopEvt = (e) => {
       if (e) {
-        if (e.stopPropagation) e.stopPropagation();
-        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
       }
     };
+
+    // Bubble-phase event trap on host to prevent events from escaping into Instagram's outer container
+    ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
+      this.host.addEventListener(evtType, stopEvt, false);
+    });
 
     // Define bound handlers for cleanup
     this.boundHandlers = {
@@ -232,9 +237,6 @@ class InstaPlayerUI {
 
     document.addEventListener('click', this.boundHandlers.documentClick);
     fsBtn.addEventListener('click', this.boundHandlers.fsClick);
-
-    // Stop click bubbling on host bar so clicking empty space on the bar doesn't trigger Instagram pause
-    this.host.addEventListener('click', stopEvt);
 
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);

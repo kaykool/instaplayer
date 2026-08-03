@@ -1,12 +1,10 @@
-# InstaPlayer 🎬
+# InstaPlayer
 
-> A lightweight, bare-minimum Chrome Extension that embeds a simple, easy-to-operate video player control bar directly onto Instagram Reels, Feed posts, Explore videos, and Stories.
+Chrome extension that adds a video player control bar to Instagram Reels, Feed posts, Explore videos, and Stories.
 
----
+## Features
 
-## 📸 Feature Preview
-
-InstaPlayer overlays a high-contrast, flat dark control bar docked at the bottom of Instagram videos:
+Overlays a high-contrast dark control bar at the bottom of Instagram videos:
 
 ```
 +-----------------------------------------------------------------------------------------------+
@@ -18,54 +16,34 @@ InstaPlayer overlays a high-contrast, flat dark control bar docked at the bottom
 +-----------------------------------------------------------------------------------------------+
 ```
 
-### Key Controls & Features:
-* **Play / Pause**: One-click play/pause toggle.
-* **Mute / Volume**: Toggle mute state cleanly (`🔊` / `🔇`). Preserves unmuted state on play resume.
-* **Time Counter**: Clean `MM:SS / MM:SS` time display with monospaced tabular numbers.
-* **Interactive Progress Bar**: High-contrast seek bar with white progress fill and circular thumb handle.
-* **Playback Speed Menu**: Click `1x` to open a popup preset menu (`0.25x`, `0.5x`, `0.75x`, `1x`, `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`).
-* **Always Visible & Bare-Minimum**: High contrast dark flat overlay docked at the bottom for effortless operation (no glassmorphism / fancy blur distraction).
-* **Stateless & Lightweight**: Built with 0 external dependencies, < 1.5MB memory footprint.
+- **Play / Pause**: toggles playback.
+- **Mute / Volume**: toggles mute; preserves unmuted state on play resume.
+- **Time Counter**: `MM:SS / MM:SS` display with tabular numbers.
+- **Progress Bar**: seek bar with white progress fill and thumb handle.
+- **Playback Speed**: `1x` button opens preset menu (0.25x–3x).
+- **Stateless & Lightweight**: zero external dependencies, no persistent storage.
 
----
+## Install
 
-## 🚀 Quick Start / Installation Guide
+Load unpacked in Chrome or any Chromium browser (Edge, Brave, Vivaldi):
 
-To install and test **InstaPlayer** in Google Chrome or any Chromium browser (Edge, Brave, Vivaldi):
+1. Open the extension management page, enable **Developer mode**:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+   - Brave: `brave://extensions`
+   - Vivaldi: `vivaldi://extensions`
+2. Click **Load unpacked**, select this directory (contains `manifest.json`).
+3. Open [Instagram](https://www.instagram.com) — the control bar appears on videos.
 
-1. **Clone or Download Repository**:
-   ```bash
-   git clone https://github.com/your-username/instaplayer.git
-   cd instaplayer
-   ```
+## Docs
 
-2. **Open Chrome Extension Management**:
-   * Navigate to `chrome://extensions` in your browser address bar.
-   * Enable **Developer mode** using the toggle switch in the upper right corner.
+- [SPECIFICATION.md](SPECIFICATION.md): product scope and UI specs.
+- [MILESTONES.md](MILESTONES.md): development roadmap and task checklists.
+- [ARCHITECTURE.md](ARCHITECTURE.md): Shadow DOM isolation and MutationObserver SPA detection.
 
-3. **Load Unpacked Extension**:
-   * Click **Load unpacked**.
-   * Select the `instaplayer` root directory containing `manifest.json`.
+## Tech Stack
 
-4. **Test on Instagram**:
-   * Open [Instagram](https://www.instagram.com) and navigate to any Reel or video post.
-   * Notice the bare-minimum player control bar docked at the bottom of the video!
-
----
-
-## 📁 Documentation Roadmap
-
-The repository includes comprehensive architecture and technical specifications:
-
-* 📄 **[SPECIFICATION.md](file:///run/media/sw/Kanan/ProjectCoding/1New%20Era/instaplayer/SPECIFICATION.md)**: Product scope, functional specifications, bare-minimum UI specs, non-functional requirements.
-* 🗺️ **[MILESTONES.md](file:///run/media/sw/Kanan/ProjectCoding/1New%20Era/instaplayer/MILESTONES.md)**: Step-by-step 6-stage development roadmap and milestone task checklists.
-* 🏗️ **[ARCHITECTURE.md](file:///run/media/sw/Kanan/ProjectCoding/1New%20Era/instaplayer/ARCHITECTURE.md)**: Technical architecture, Shadow DOM isolation, MutationObserver SPA detection strategy, and sequence diagrams.
-
----
-
-## 🛠️ Tech Stack & Requirements
-
-* **Manifest**: Chrome Extension Manifest V3
-* **Frontend Logic**: Vanilla JavaScript (ES2022+), Web Components & Shadow DOM (`attachShadow`)
-* **Styling**: Minimalist Flat CSS3 (High-contrast layout, flexbox, CSS custom properties)
-* **Target Domain**: `https://www.instagram.com/*`
+- Chrome Extension Manifest V3
+- Vanilla JavaScript (ES2022+), Web Components & Shadow DOM
+- Flat CSS3 (flexbox, custom properties)
+- Target domain: `https://www.instagram.com/*`

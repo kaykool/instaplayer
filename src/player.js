@@ -247,6 +247,11 @@ class InstaPlayerUI {
         }
         this.isUserSeeking = false;
       },
+      cancelSeek: () => {
+        // touchcancel fires without touchend/change; reset flag so time updates resume
+        this.isUserSeeking = false;
+        this.updateTimeState();
+      },
       seekerClick: (e) => {
         stopEvt(e);
       },
@@ -301,6 +306,7 @@ class InstaPlayerUI {
     seeker.addEventListener('change', this.boundHandlers.commitSeek);
     seeker.addEventListener('mouseup', this.boundHandlers.commitSeek);
     seeker.addEventListener('touchend', this.boundHandlers.commitSeek);
+    seeker.addEventListener('touchcancel', this.boundHandlers.cancelSeek);
     seeker.addEventListener('click', this.boundHandlers.seekerClick);
 
     speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
@@ -412,6 +418,7 @@ class InstaPlayerUI {
         seeker.removeEventListener('change', h.commitSeek);
         seeker.removeEventListener('mouseup', h.commitSeek);
         seeker.removeEventListener('touchend', h.commitSeek);
+      if (h.cancelSeek) seeker.removeEventListener('touchcancel', h.cancelSeek);
       }
       if (h.seekerClick) seeker.removeEventListener('click', h.seekerClick);
     }

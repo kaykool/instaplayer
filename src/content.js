@@ -11,7 +11,7 @@
    * Robust Multi-Tiered Container Resolver.
    * Resilient to Instagram CSS class renames/obfuscation.
    * Priority:
-   * 1. Semantic attributes (div[data-instancekey], data-testid)
+   * 1. Semantic attributes (div[data-instancekey])
    * 2. ARIA & HTML5 Semantic elements (article, div[role="dialog"], [role="region"])
    * 3. Known CSS class selectors (div._aaqg, div._aabw, div._abm0, div._aakw)
    * 4. Structural Computed Style Traversal (highest positioned parent wrapper)

@@ -9,27 +9,27 @@
 
   /**
    * Find the optimal outer container for Instagram video card
-   * - Reels view: div._aaqg (outer reel card)
-   * - Posts (/p/) & Feed: outer media box (div._aabw / div._abm0 / div._aakw) or parent of div.x5yr21d
+   * Priority:
+   * 1. div[data-instancekey] (Instagram's primary wrapper for video + overlay components)
+   * 2. div._aaqg (Reels card)
+   * 3. div._aabw / div._abm0 / div._aakw (Feed post media box)
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // 1. Instagram Reels (vertical reel card container)
+    // 1. Instagram wrapper containing video element & native overlay components
+    const instanceKeyContainer = video.closest('div[data-instancekey]');
+    if (instanceKeyContainer) return instanceKeyContainer;
+
+    // 2. Instagram Reels (vertical reel card container)
     const reelBox = video.closest('div._aaqg');
     if (reelBox) return reelBox;
 
-    // 2. Posts (/p/ pages, feed posts, explore lightbox): target outer video frame card
+    // 3. Posts (/p/ pages, feed posts, explore lightbox): outer video frame card
     const mediaBox = video.closest('div._aabw, div._abm0, div._aakw, div._aamv');
     if (mediaBox) return mediaBox;
-
-    // 3. Fallback: if video is inside div.x5yr21d (Instagram video player box), attach to its parent
-    const playerWrapper = video.closest('div.x5yr21d, div[aria-label="Video player"]');
-    if (playerWrapper && playerWrapper.parentElement) {
-      return playerWrapper.parentElement;
-    }
 
     // 4. Fallback to direct video parent element
     return video.parentElement;

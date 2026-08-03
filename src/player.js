@@ -35,8 +35,12 @@ class InstaPlayerUI {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
-    // Adjust video player wrapper height (calc(100% - 38px)) so bar sits below video without overlapping
-    this.videoPlayerWrapper = this.video.closest('div.x5yr21d, div[aria-label="Video player"]');
+    // Adjust Instagram video player overlay container height (calc(100% - 38px)) so bar sits cleanly underneath
+    this.videoPlayerWrapper = parent.querySelector('div[aria-label="Video player"]') ||
+                              this.video.closest('div[aria-label="Video player"]') ||
+                              this.video.closest('div.x5yr21d') ||
+                              this.video.parentElement;
+
     if (this.videoPlayerWrapper && this.videoPlayerWrapper !== parent) {
       this.originalWrapperHeight = this.videoPlayerWrapper.style.height || '';
       this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');

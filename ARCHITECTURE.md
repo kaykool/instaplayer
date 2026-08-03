@@ -60,14 +60,14 @@ Because Instagram is a Single Page Application (SPA) built with React that frequ
 * **Role**: Constructs and manages the bare-minimum UI control bar.
 * **Responsibilities**:
   1. Creates an isolated `ShadowRoot` (`attachShadow({ mode: 'open' })`) to prevent CSS style bleed between Instagram and InstaPlayer.
-  2. Renders minimal flat HTML structure and attaches SVG icon templates.
+  2. Renders minimal flat HTML structure and attaches control elements.
   3. Directs bidirectional event synchronization between HTML5 `<video>` properties and Shadow DOM controls.
 
 ### 2.3 Style Encapsulation (`src/shadow-styles.css`)
 * **Role**: Complete CSS stylesheet loaded inside the Shadow Root.
 * **Key Visual Design System**:
-  * Background: Flat dark backdrop `rgba(0, 0, 0, 0.75)` or `#121212` for high readability.
-  * Border Top: `1px solid rgba(255, 255, 255, 0.1)`.
+  * Background: Flat dark backdrop `rgba(0, 0, 0, 0.85)` or `#121212` for high readability.
+  * Border Top: `1px solid rgba(255, 255, 255, 0.12)`.
   * Controls: High contrast white icons and monospaced time text.
   * Custom Range Slider Thumb & Track styling without heavy effects or GPU filters.
 
@@ -105,7 +105,6 @@ sequenceDiagram
 | Click Mute Button | `onMuteClick()` | `video.muted = !video.muted` | `volumechange` updates UI Mute icon |
 | Drag Progress Bar | `onSeekInput(val)` | `video.currentTime = (val / 100) * video.duration` | `timeupdate` moves progress thumb |
 | Click Speed Preset | `onSpeedSelect(rate)` | `video.playbackRate = rate` | UI speed button text updates to `rate + 'x'` |
-| Click Fullscreen | `onFullscreenClick()` | `wrapper.requestFullscreen()` | Fullscreen state toggles |
 
 ---
 

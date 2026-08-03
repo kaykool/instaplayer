@@ -13,7 +13,7 @@ InstaPlayer overlays a high-contrast, flat dark control bar docked at the bottom
 | INSTAGRAM VIDEO CONTENT                                                                       |
 |                                                                                               |
 | +-------------------------------------------------------------------------------------------+ |
-| |  ▶   🔊  0:35 / 0:35  [===================o================]               1x   ⛶         | |
+| |  ▶   🔊  0:35 / 0:35  [===================o================]               1x             | |
 | +-------------------------------------------------------------------------------------------+ |
 +-----------------------------------------------------------------------------------------------+
 ```
@@ -24,7 +24,6 @@ InstaPlayer overlays a high-contrast, flat dark control bar docked at the bottom
 * **Time Counter**: Clean `MM:SS / MM:SS` time display with monospaced tabular numbers.
 * **Interactive Progress Bar**: High-contrast seek bar with white progress fill and circular thumb handle.
 * **Playback Speed Menu**: Click `1x` to open a popup preset menu (`0.25x`, `0.5x`, `0.75x`, `1x`, `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`).
-* **Fullscreen Mode**: Expand video to crisp full screen.
 * **Always Visible & Bare-Minimum**: High contrast dark flat overlay docked at the bottom for effortless operation (no glassmorphism / fancy blur distraction).
 * **Stateless & Lightweight**: Built with 0 external dependencies, < 1.5MB memory footprint.
 

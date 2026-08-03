@@ -119,7 +119,6 @@ class InstaPlayerUI {
           <button class="ip-speed-item" data-speed="3">3x</button>
         </div>
       </div>
-      <button class="ip-btn ip-fs-btn" title="Fullscreen" aria-label="Toggle fullscreen mode">⛶</button>
     `;
 
     this.shadow.appendChild(bar);
@@ -132,8 +131,7 @@ class InstaPlayerUI {
       seeker: bar.querySelector('.ip-seeker'),
       speedBtn: bar.querySelector('.ip-speed-btn'),
       speedMenu: bar.querySelector('.ip-speed-menu'),
-      speedItems: bar.querySelectorAll('.ip-speed-item'),
-      fsBtn: bar.querySelector('.ip-fs-btn')
+      speedItems: bar.querySelectorAll('.ip-speed-item')
     };
 
     // Ensure parent position is relative/absolute
@@ -147,7 +145,7 @@ class InstaPlayerUI {
   }
 
   bindEvents() {
-    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems } = this.elements;
 
     // Helper to stop event propagation so Instagram click-to-pause handlers do not intercept control clicks
     const stopEvt = (e) => {
@@ -219,21 +217,6 @@ class InstaPlayerUI {
           speedMenu.classList.remove('open');
         }
       },
-      fsClick: (e) => {
-        stopEvt(e);
-        const targetContainer = this.host.parentElement || this.video.parentElement || this.video;
-        if (!document.fullscreenElement) {
-          if (targetContainer.requestFullscreen) {
-            targetContainer.requestFullscreen();
-          } else if (targetContainer.webkitRequestFullscreen) {
-            targetContainer.webkitRequestFullscreen();
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          }
-        }
-      },
       videoPlay: () => {
         this.updatePlayState();
         if (this.userExplicitlyUnmuted && this.video.muted) {
@@ -271,7 +254,6 @@ class InstaPlayerUI {
     });
 
     document.addEventListener('click', this.boundHandlers.documentClick);
-    fsBtn.addEventListener('click', this.boundHandlers.fsClick);
 
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);
@@ -351,7 +333,7 @@ class InstaPlayerUI {
       this.disabledOverlays = [];
     }
 
-    const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn } = this.elements;
     const h = this.boundHandlers;
 
     if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
@@ -373,7 +355,6 @@ class InstaPlayerUI {
       });
     }
     if (h.documentClick) document.removeEventListener('click', h.documentClick);
-    if (h.fsClick && fsBtn) fsBtn.removeEventListener('click', h.fsClick);
 
     if (this.video && h.videoPlay) {
       this.video.removeEventListener('play', h.videoPlay);

@@ -17,6 +17,7 @@ class InstaPlayerUI {
     this.boundHandlers = {};
     this.videoPlayerWrapper = null;
     this.originalWrapperHeight = '';
+    this.disabledOverlays = [];
 
     if (!this.init(customContainer)) {
       return;
@@ -45,6 +46,15 @@ class InstaPlayerUI {
       this.originalWrapperHeight = this.videoPlayerWrapper.style.height || '';
       this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');
     }
+
+    // Disable pointer-events on native Instagram transparent click-intercepting overlays in parent
+    const nativeOverlays = parent.querySelectorAll('div._aav3, div[role="slider"], div[role="button"].x1i10hfl');
+    nativeOverlays.forEach((overlay) => {
+      if (overlay && !overlay.classList.contains('instaplayer-host')) {
+        this.disabledOverlays.push({ element: overlay, prevPointer: overlay.style.pointerEvents });
+        overlay.style.setProperty('pointer-events', 'none', 'important');
+      }
+    });
 
     // Create host container with explicit maximum z-index in light DOM
     this.host = document.createElement('div');
@@ -146,7 +156,7 @@ class InstaPlayerUI {
       }
     };
 
-    // Bubble-phase event trap on host to prevent events from escaping into Instagram's outer container
+    // Bubble-phase event traps on host to stop events from escaping to Instagram outer container
     ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
       this.host.addEventListener(evtType, stopEvt, false);
     });
@@ -324,6 +334,20 @@ class InstaPlayerUI {
       } else {
         this.videoPlayerWrapper.style.removeProperty('height');
       }
+    }
+
+    // Restore disabled native overlays
+    if (this.disabledOverlays) {
+      this.disabledOverlays.forEach(({ element, prevPointer }) => {
+        if (element) {
+          if (prevPointer) {
+            element.style.pointerEvents = prevPointer;
+          } else {
+            element.style.removeProperty('pointer-events');
+          }
+        }
+      });
+      this.disabledOverlays = [];
     }
 
     const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;

@@ -30,4 +30,4 @@ Ponytail is a development philosophy and agent behavior mode that strictly enfor
 ---
 
 ## 🚀 Activation
-Ponytail mode is now active for this project! All future coding actions will strictly adhere to YAGNI minimalism, zero bloat, and surgical edits.
+Ponytail mode applies only after the user activates it with one of the triggers in the description.

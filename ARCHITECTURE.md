@@ -92,7 +92,7 @@ sequenceDiagram
     alt Video found & not yet processed
         CS->>V: Set attribute data-instaplayer-attached="true"
         CS->>SD: Instantiates InstaPlayer ShadowRoot inside wrapper
-        SD->>V: Binds HTML5 media listeners (timeupdate, play, pause, volumechange)
+        SD->>V: Binds HTML5 media listeners (timeupdate, play, pause)
         SD->>SD: Render Bare-Minimum Control Bar UI
     end
 ```
@@ -102,7 +102,6 @@ sequenceDiagram
 | User Trigger | Shadow DOM UI Handler | Target `<video>` Action | Event Listener Callback |
 |---|---|---|---|
 | Click Play/Pause Button | `onPlayPauseClick()` | `video.paused ? video.play() : video.pause()` | `play` / `pause` updates UI icon |
-| Click Mute Button | `onMuteClick()` | `video.muted = !video.muted` | `volumechange` updates UI Mute icon |
 | Drag Progress Bar | `onSeekInput(val)` | `video.currentTime = (val / 100) * video.duration` | `timeupdate` moves progress thumb |
 | Click Speed Preset | `onSpeedSelect(rate)` | `video.playbackRate = rate` | UI speed button text updates to `rate + 'x'` |
 | Click Fullscreen | `onFullscreenClick()` | `wrapper.requestFullscreen()` | Fullscreen state toggles |
@@ -114,28 +113,14 @@ sequenceDiagram
 To ensure Instagram's global CSS rules do not alter the bare-minimum control bar, and extension styles do not pollute Instagram:
 
 ```javascript
-// Example Shadow DOM instantiation pattern
 function attachInstaPlayer(videoElement) {
   const container = videoElement.parentElement;
   
-  // Create host wrapper
   const host = document.createElement('div');
   host.className = 'instaplayer-host';
   
-  // Attach open shadow root
   const shadow = host.attachShadow({ mode: 'open' });
-  
-  // Inject internal CSS
-  const style = document.createElement('style');
-  style.textContent = SHADOW_STYLES_CSS;
-  shadow.appendChild(style);
-
-  // Inject UI structure
-  const playerContainer = createPlayerTemplate();
-  shadow.appendChild(playerContainer);
-
-  // Append host overlay to video container
-  container.appendChild(host);
+  const playerUI = new InstaPlayerUI(videoElement, container);
 }
 ```
 

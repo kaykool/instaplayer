@@ -1,7 +1,7 @@
 # InstaPlayer - Chrome Extension Specification
 
 ## 1. Overview
-**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, audio muting, and fullscreen controls without visual distraction.
+**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, and fullscreen controls without visual distraction.
 
 ---
 
@@ -30,14 +30,14 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 |                                                                                               |
 |                                                                                               |
 | +-------------------------------------------------------------------------------------------+ |
-| | [> / ||]  [Vol]  0:35 / 0:35  [===================o================]         [1x]    [FS] | |
+| | [> / ||]  0:35 / 0:35  [===================o================]               [1x]    [FS]  | |
 | +-------------------------------------------------------------------------------------------+ |
 +-----------------------------------------------------------------------------------------------+
 ```
 
 * **Position**: Docked at the bottom of the video wrapper container (`position: absolute; bottom: 0; left: 0; right: 0; z-index: 9999;`).
 * **Visibility Mode**: Always visible docked bar without auto-hiding for instant readability and ease of operation.
-* **Background Style**: Ultra-clean, high-contrast flat layout (no heavy blur effects or glassmorphism):
+* **Background Style**: Ultra-clean, high-contrast flat layout:
   * Background: Solid dark opacity `rgba(0, 0, 0, 0.75)` or `#121212` for optimal contrast against video backgrounds.
   * Border: Simple top border `1px solid rgba(255, 255, 255, 0.1)`.
   * Height: Compact `36px` to `40px`.
@@ -55,29 +55,23 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
   * Click to toggle play/pause status.
   * Synchronized directly with `video.play()` and `video.pause()`.
 
-### 4.2 Mute / Unmute & Volume Toggle (`[🔊]` / `[🔇]`)
-* **State Sync**: Listens to `<video>` events (`volumechange`).
-* **Interaction**:
-  * Click button to toggle mute state (`video.muted = !video.muted`).
-  * Icon toggles cleanly between Mute and Unmute states.
-
-### 4.3 Time Display (`MM:SS / MM:SS`)
+### 4.2 Time Display (`MM:SS / MM:SS`)
 * **Format**: Current time and total duration formatted as `M:SS` or `MM:SS` (e.g., `0:35 / 0:35`).
 * **Updates**: Driven by `<video>` `timeupdate`, `durationchange`, and `loadedmetadata` events.
 
-### 4.4 Interactive Progress / Seek Bar
+### 4.3 Interactive Progress / Seek Bar
 * **Track**: Simple high-contrast track (`rgba(255, 255, 255, 0.3)`).
 * **Progress Fill**: Solid bright white fill (`#ffffff`) indicating current timestamp.
 * **Scrubber Thumb**: Compact 10px circular white thumb indicator for easy scrubbing.
 * **Interaction**: Click or drag to jump to target timestamp (`video.currentTime = seekPercentage * video.duration`).
 
-### 4.5 Playback Speed Control (`[1x]`)
+### 4.4 Playback Speed Control (`[1x]`)
 * **Active Indicator**: Button displays current playback speed label (e.g., `1x`, `1.5x`, `2x`).
 * **Interaction**: Click opens a clean, minimal popup preset menu.
 * **Speed Presets**: `0.25x`, `0.5x`, `0.75x`, `1x` (Default), `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`.
 * **Behavior**: Selecting an option updates `video.playbackRate` immediately.
 
-### 4.6 Fullscreen Toggle (`[⛶]`)
+### 4.5 Fullscreen Toggle (`[⛶]`)
 * **Interaction**: Toggles fullscreen mode for the parent video wrapper (`wrapper.requestFullscreen()` / `document.exitFullscreen()`).
 
 ---

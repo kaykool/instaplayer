@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { formatTime } from '../../src/utils.js';
 import InstaPlayerUI from '../../src/player.js';
 
-// Make formatTime available globally for InstaPlayerUI inside test scope
 globalThis.formatTime = formatTime;
 
 describe('InstaPlayerUI Component (src/player.js)', () => {
@@ -11,7 +10,7 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
 
   beforeEach(() => {
     container = document.createElement('div');
-    container.className = '_aaqg'; // Instagram Reels container class
+    container.className = '_aaqg';
     document.body.appendChild(container);
 
     video = document.createElement('video');
@@ -35,7 +34,6 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     const shadow = playerUI.shadow;
 
     expect(shadow.querySelector('.ip-play-btn')).not.toBeNull();
-    expect(shadow.querySelector('.ip-mute-btn')).not.toBeNull();
     expect(shadow.querySelector('.ip-seeker')).not.toBeNull();
     expect(shadow.querySelector('.ip-speed-btn')).not.toBeNull();
     expect(shadow.querySelector('.ip-fs-btn')).not.toBeNull();
@@ -56,17 +54,6 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     Object.defineProperty(video, 'paused', { value: true, configurable: true });
     video.dispatchEvent(new Event('pause'));
     expect(playBtn.textContent).toBe('▶');
-  });
-
-  it('updates Mute icon state on video volumechange event', () => {
-    const playerUI = new InstaPlayerUI(video);
-    const muteBtn = playerUI.elements.muteBtn;
-
-    expect(muteBtn.textContent).toBe('🔊');
-
-    video.muted = true;
-    video.dispatchEvent(new Event('volumechange'));
-    expect(muteBtn.textContent).toBe('🔇');
   });
 
   it('destroys overlay and cleans up DOM host on destroy()', () => {

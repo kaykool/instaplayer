@@ -11,9 +11,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.instagram.com/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*"
+        "https://www.instagram.com/*"
       ],
       "js": [
         "src/utils.js",
@@ -30,9 +28,7 @@
         "icons/*"
       ],
       "matches": [
-        "https://www.instagram.com/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*"
+        "https://www.instagram.com/*"
       ]
     }
   ]

@@ -9,8 +9,8 @@
 
   /**
    * Find the optimal video container for Instagram videos
-   * - On Reels / Reel Modals: Attaches to div._aaqg / div[role="dialog"] above native click overlays
-   * - On Feed Posts / /p/ pages: Attaches to media box div._aabw / div._aamv above post footer
+   * - Reels view & modals: div._aaqg / div[role="dialog"] (outer reel container)
+   * - Posts & /p/ pages: div._abm0 / div._aabw / div._aakw (outer video frame box above post footer)
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
@@ -21,9 +21,9 @@
     const reelContainer = video.closest('div._aaqg, div[role="dialog"]');
     if (reelContainer) return reelContainer;
 
-    // 2. Feed Posts & /p/ post pages: attach to video media box above post footer
-    const postMediaBox = video.closest('div._aabw, div._aamv, div._aakw');
-    if (postMediaBox) return postMediaBox;
+    // 2. Feed Posts & /p/ post pages: attach to outer video frame container box above post footer
+    const postContainer = video.closest('div._abm0, div._aabw, div._aakw, div._aamv');
+    if (postContainer) return postContainer;
 
     // 3. Fallback to parent element
     return video.parentElement;

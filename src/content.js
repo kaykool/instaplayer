@@ -7,6 +7,10 @@
 
   const activePlayers = new WeakMap();
 
+  /**
+   * Attaches the player interface to a video element once.
+   * @param {HTMLVideoElement} video - The video element to process.
+   */
   function processVideoNode(video) {
     if (!video || video.dataset.instaplayerAttached) return;
 
@@ -34,6 +38,9 @@
     });
   }
 
+  /**
+   * Processes all video elements currently present in the document.
+   */
   function scanDOM() {
     const videos = document.querySelectorAll('video');
     videos.forEach(processVideoNode);

@@ -15,6 +15,8 @@ class InstaPlayerUI {
     this.isUserSeeking = false;
     this.userExplicitlyUnmuted = !videoElement.muted;
     this.boundHandlers = {};
+    this.videoPlayerWrapper = null;
+    this.originalWrapperHeight = '';
 
     if (!this.init(customContainer)) {
       return;
@@ -33,6 +35,13 @@ class InstaPlayerUI {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
+    // Adjust video player wrapper height (calc(100% - 38px)) so bar never overlaps video content
+    this.videoPlayerWrapper = this.video.closest('div.x5yr21d, div[aria-label="Video player"], div._aabw, div._abm0') || this.video.parentElement;
+    if (this.videoPlayerWrapper && this.videoPlayerWrapper !== parent) {
+      this.originalWrapperHeight = this.videoPlayerWrapper.style.height || '';
+      this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');
+    }
+
     // Create host container with explicit maximum z-index in light DOM
     this.host = document.createElement('div');
     this.host.className = 'instaplayer-host';
@@ -41,6 +50,7 @@ class InstaPlayerUI {
     this.host.style.setProperty('left', '0', 'important');
     this.host.style.setProperty('right', '0', 'important');
     this.host.style.setProperty('width', '100%', 'important');
+    this.host.style.setProperty('height', '38px', 'important');
     this.host.style.setProperty('z-index', '2147483647', 'important');
     this.host.style.setProperty('pointer-events', 'auto', 'important');
 
@@ -50,7 +60,7 @@ class InstaPlayerUI {
     // Inject styles with maximum 32-bit integer z-index (2147483647)
     const style = document.createElement('style');
     style.textContent = `
-      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 38px !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
       .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
@@ -302,6 +312,15 @@ class InstaPlayerUI {
 
   destroy() {
     if (!this.host) return;
+
+    // Restore video player wrapper height
+    if (this.videoPlayerWrapper) {
+      if (this.originalWrapperHeight) {
+        this.videoPlayerWrapper.style.height = this.originalWrapperHeight;
+      } else {
+        this.videoPlayerWrapper.style.removeProperty('height');
+      }
+    }
 
     const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;
     const h = this.boundHandlers;

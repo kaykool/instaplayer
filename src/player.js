@@ -33,14 +33,21 @@ class InstaPlayerUI {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
-    // Create host container
+    // Create host container with explicit maximum z-index in light DOM
     this.host = document.createElement('div');
     this.host.className = 'instaplayer-host';
+    this.host.style.setProperty('position', 'absolute', 'important');
+    this.host.style.setProperty('bottom', '0', 'important');
+    this.host.style.setProperty('left', '0', 'important');
+    this.host.style.setProperty('right', '0', 'important');
+    this.host.style.setProperty('width', '100%', 'important');
+    this.host.style.setProperty('z-index', '2147483647', 'important');
+    this.host.style.setProperty('pointer-events', 'auto', 'important');
 
     // Attach Shadow DOM root
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    // Inject styles with max z-index, explicit pointer-events, and enlarged seekbar
+    // Inject styles with maximum 32-bit integer z-index (2147483647)
     const style = document.createElement('style');
     style.textContent = `
       :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }

@@ -40,28 +40,28 @@ class InstaPlayerUI {
     // Attach Shadow DOM root
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    // Inject styles
+    // Inject styles (z-index 2147483647 guarantees top layer over Instagram overlays)
     const style = document.createElement('style');
     style.textContent = `
-      :host { display: block; position: absolute; bottom: 0; left: 0; right: 0; width: 100%; z-index: 9999; pointer-events: auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
-      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; }
-      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; }
+      :host { display: block; position: absolute; bottom: 0; left: 0; right: 0; width: 100%; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative; z-index: 2147483647; }
+      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; }
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
       .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
-      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
-      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; }
-      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; }
+      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; }
+      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; pointer-events: auto !important; }
+      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; pointer-events: auto !important; }
       .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; cursor: pointer; }
-      .ip-speed-wrapper { position: relative; }
-      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 10000; min-width: 64px; }
+      .ip-speed-wrapper { position: relative; pointer-events: auto !important; }
+      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647; min-width: 64px; pointer-events: auto !important; }
       .ip-speed-menu.open { display: block; }
-      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; }
+      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; }
       .ip-speed-item:hover { background: rgba(255, 255, 255, 0.15); }
       .ip-speed-item.active { font-weight: bold; color: #3897f0; }
     `;
     this.shadow.appendChild(style);
 
-    // Build Bar UI Template (Includes sound button)
+    // Build Bar UI Template
     const bar = document.createElement('div');
     bar.className = 'ip-bar';
     bar.innerHTML = `
@@ -114,9 +114,18 @@ class InstaPlayerUI {
   bindEvents() {
     const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
 
+    // Helper to stop event propagation so Instagram click-to-pause handlers do not intercept control clicks
+    const stopEvt = (e) => {
+      if (e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      }
+    };
+
     // Define bound handlers for cleanup
     this.boundHandlers = {
-      playClick: () => {
+      playClick: (e) => {
+        stopEvt(e);
         if (this.video.paused) {
           const promise = this.video.play();
           if (promise && typeof promise.then === 'function') {
@@ -134,26 +143,35 @@ class InstaPlayerUI {
           this.video.pause();
         }
       },
-      muteClick: () => {
+      muteClick: (e) => {
+        stopEvt(e);
         this.video.muted = !this.video.muted;
         this.userExplicitlyUnmuted = !this.video.muted;
       },
-      seekerMousedown: () => { this.isUserSeeking = true; },
-      seekerTouchstart: () => { this.isUserSeeking = true; },
-      seekerInput: () => {
+      seekerMousedown: (e) => {
+        stopEvt(e);
+        this.isUserSeeking = true;
+      },
+      seekerTouchstart: (e) => {
+        stopEvt(e);
+        this.isUserSeeking = true;
+      },
+      seekerInput: (e) => {
+        stopEvt(e);
         if (this.video.duration) {
           const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
           this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
         }
       },
-      commitSeek: () => {
+      commitSeek: (e) => {
+        stopEvt(e);
         if (this.video.duration) {
           this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
         }
         this.isUserSeeking = false;
       },
       speedBtnClick: (e) => {
-        e.stopPropagation();
+        stopEvt(e);
         speedMenu.classList.toggle('open');
       },
       documentClick: (e) => {
@@ -161,7 +179,8 @@ class InstaPlayerUI {
           speedMenu.classList.remove('open');
         }
       },
-      fsClick: () => {
+      fsClick: (e) => {
+        stopEvt(e);
         const targetContainer = this.host.parentElement || this.video.parentElement || this.video;
         if (!document.fullscreenElement) {
           if (targetContainer.requestFullscreen) {
@@ -192,7 +211,7 @@ class InstaPlayerUI {
     playBtn.addEventListener('click', this.boundHandlers.playClick);
     muteBtn.addEventListener('click', this.boundHandlers.muteClick);
     seeker.addEventListener('mousedown', this.boundHandlers.seekerMousedown);
-    seeker.addEventListener('touchstart', this.boundHandlers.seekerTouchstart, { passive: true });
+    seeker.addEventListener('touchstart', this.boundHandlers.seekerTouchstart, { passive: false });
     seeker.addEventListener('input', this.boundHandlers.seekerInput);
     seeker.addEventListener('change', this.boundHandlers.commitSeek);
     seeker.addEventListener('mouseup', this.boundHandlers.commitSeek);
@@ -201,7 +220,8 @@ class InstaPlayerUI {
     speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
     this.speedItemHandlers = [];
     speedItems.forEach((item) => {
-      const handler = () => {
+      const handler = (e) => {
+        stopEvt(e);
         const rate = parseFloat(item.dataset.speed);
         this.video.playbackRate = rate;
         speedMenu.classList.remove('open');
@@ -212,6 +232,9 @@ class InstaPlayerUI {
 
     document.addEventListener('click', this.boundHandlers.documentClick);
     fsBtn.addEventListener('click', this.boundHandlers.fsClick);
+
+    // Stop click bubbling on host bar so clicking empty space on the bar doesn't trigger Instagram pause
+    this.host.addEventListener('click', stopEvt);
 
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);

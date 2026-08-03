@@ -23,7 +23,7 @@ Development follows a **PR-per-Milestone** workflow:
 | **M3: Bare-Minimum Player Overlay UI** | `feature/m3-bare-ui` | Minimal, flat high-contrast layout | Simple control bar layout, progress bar, high-contrast icons, speed popup | Day 3 | Completed |
 | **M4: Media Event Sync & Interactive Logic** | `feature/m4-media-sync` | HTML5 Video API bindings | Play/Pause, Mute/Unmute, Seek, Speed menu, Fullscreen | Day 4 | Completed |
 | **M5: Multi-Context Instagram Testing** | `feature/m5-testing` | Cross-view testing & edge cases | Reels, Feed carousels, Explore modal, Stories support | Day 5 | Completed |
-| **M6: Packaging & Store Readiness** | `feature/m6-packaging` | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 | In Progress |
+| **M6: Packaging & Store Readiness** | `feature/m6-packaging` | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 | Completed |
 
 ---
 
@@ -86,5 +86,5 @@ Development follows a **PR-per-Milestone** workflow:
 
 ### Milestone 6: Packaging & Store Readiness
 - **Branch**: `feature/m6-packaging`
-- [ ] Compile clean distribution ZIP file (`instaplayer-v1.0.0.zip`).
-- [ ] Complete documentation.
+- [x] Compile clean distribution ZIP file (`instaplayer-v1.0.0.zip`) via `npm run package` (`scripts/package.mjs`, zero-dep store/deflate ZIP).
+- [x] Complete documentation (README install guide, SPECIFICATION, ARCHITECTURE).

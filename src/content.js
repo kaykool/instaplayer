@@ -8,9 +8,9 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the optimal video container for Instagram videos
+   * Find the optimal outer container for Instagram video card
    * - Reels view: div._aaqg (outer reel card)
-   * - Posts (/p/) & Feed: div._aabw / div._abm0 / div._aakw / div.x5yr21d (video frame box above comments/footer)
+   * - Posts (/p/) & Feed: outer media box (div._aabw / div._abm0 / div._aakw) or parent of div.x5yr21d
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
@@ -21,11 +21,17 @@
     const reelBox = video.closest('div._aaqg');
     if (reelBox) return reelBox;
 
-    // 2. Posts (/p/ pages, feed posts, explore lightbox): target video frame box strictly above post footer
-    const mediaBox = video.closest('div._aabw, div._abm0, div._aakw, div._aamv, div.x5yr21d');
+    // 2. Posts (/p/ pages, feed posts, explore lightbox): target outer video frame card
+    const mediaBox = video.closest('div._aabw, div._abm0, div._aakw, div._aamv');
     if (mediaBox) return mediaBox;
 
-    // 3. Fallback to direct video parent element
+    // 3. Fallback: if video is inside div.x5yr21d (Instagram video player box), attach to its parent
+    const playerWrapper = video.closest('div.x5yr21d, div[aria-label="Video player"]');
+    if (playerWrapper && playerWrapper.parentElement) {
+      return playerWrapper.parentElement;
+    }
+
+    // 4. Fallback to direct video parent element
     return video.parentElement;
   }
 

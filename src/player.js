@@ -172,7 +172,11 @@ class InstaPlayerUI {
         const isSeeker = realTarget && realTarget.classList && realTarget.classList.contains('ip-seeker');
 
         if (isSeeker) {
-          stopEvtNoPrevent(e);
+          if (evtType === 'click') {
+            stopEvt(e);
+          } else {
+            stopEvtNoPrevent(e);
+          }
         } else {
           stopEvt(e);
         }
@@ -228,7 +232,7 @@ class InstaPlayerUI {
         this.isUserSeeking = false;
       },
       seekerClick: (e) => {
-        stopEvtNoPrevent(e);
+        stopEvt(e);
       },
       speedBtnClick: (e) => {
         stopEvt(e);

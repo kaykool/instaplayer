@@ -40,7 +40,7 @@ class InstaPlayerUI {
     // Attach Shadow DOM root
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    // Inject styles with max z-index and explicit pointer-events
+    // Inject styles with max z-index, explicit pointer-events, and enlarged seekbar
     const style = document.createElement('style');
     style.textContent = `
       :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
@@ -49,9 +49,12 @@ class InstaPlayerUI {
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
       .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
       .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; cursor: pointer; }
+      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 6px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
+      .ip-seeker::-webkit-slider-thumb:hover { transform: scale(1.2); }
+      .ip-seeker::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
+      .ip-seeker::-moz-range-thumb:hover { transform: scale(1.2); }
       .ip-speed-wrapper { position: relative !important; pointer-events: auto !important; z-index: 2147483647 !important; }
       .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
       .ip-speed-menu.open { display: block; }

@@ -13,6 +13,7 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
+    this.targetPlaybackRate = (typeof videoElement.playbackRate === 'number' && videoElement.playbackRate > 0) ? videoElement.playbackRate : 1;
     this.userExplicitlyUnmuted = !videoElement.muted;
     this.boundHandlers = {};
     this.videoPlayerWrapper = null;
@@ -248,6 +249,13 @@ class InstaPlayerUI {
         if (this.userExplicitlyUnmuted && this.video.muted) {
           this.video.muted = false;
         }
+        if (this.targetPlaybackRate && this.video.playbackRate !== this.targetPlaybackRate) {
+          try {
+            this.video.playbackRate = this.targetPlaybackRate;
+          } catch {
+            // Ignore error
+          }
+        }
       },
       videoPause: () => this.updatePlayState(),
       videoVolume: () => this.updateMuteState(),
@@ -273,6 +281,7 @@ class InstaPlayerUI {
       const handler = (e) => {
         stopEvt(e);
         const rate = parseFloat(item.dataset.speed);
+        this.targetPlaybackRate = rate;
         this.video.playbackRate = rate;
         speedMenu.classList.remove('open');
       };
@@ -314,11 +323,13 @@ class InstaPlayerUI {
 
   updateSpeedState() {
     if (!this.elements.speedBtn) return;
-    const rate = this.video.playbackRate;
-    this.elements.speedBtn.textContent = `${rate}x`;
+    const currentRate = this.video.playbackRate;
+    const displayRate = (typeof currentRate === 'number' && currentRate > 0) ? currentRate : (this.targetPlaybackRate || 1);
+
+    this.elements.speedBtn.textContent = `${displayRate}x`;
     if (this.elements.speedItems) {
       this.elements.speedItems.forEach((item) => {
-        if (parseFloat(item.dataset.speed) === rate) {
+        if (parseFloat(item.dataset.speed) === displayRate) {
           item.classList.add('active');
         } else {
           item.classList.remove('active');

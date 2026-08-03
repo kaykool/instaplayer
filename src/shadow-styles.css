@@ -1,0 +1,140 @@
+/* InstaPlayer Shadow DOM Styles (Bare-Minimum Flat Design) */
+
+:host {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 9999;
+  pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ip-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  background: rgba(0, 0, 0, 0.82);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  color: #ffffff;
+}
+
+/* Action Icon Buttons */
+.ip-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.ip-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ip-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Time Display */
+.ip-time {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+/* Progress Seeker Slider */
+.ip-seeker-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin: 0 4px;
+}
+
+.ip-seeker {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.ip-seeker::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.ip-seeker:hover::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+/* Speed Selector Menu Wrapper */
+.ip-speed-wrapper {
+  position: relative;
+}
+
+.ip-speed-menu {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 6px;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  min-width: 64px;
+}
+
+.ip-speed-menu.open {
+  display: block;
+}
+
+.ip-speed-item {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ip-speed-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ip-speed-item.active {
+  font-weight: bold;
+  color: #3897f0;
+}

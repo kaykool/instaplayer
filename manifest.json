@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "InstaPlayer",
+  "version": "1.0.0",
+  "description": "Minimalistic video player control bar for Instagram Reels, Feed posts, Explore videos, and Stories.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "src/utils.js",
+        "src/player.js",
+        "src/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/shadow-styles.css",
+        "icons/*"
+      ],
+      "matches": [
+        "https://www.instagram.com/*"
+      ]
+    }
+  ]
+}

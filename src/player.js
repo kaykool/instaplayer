@@ -36,9 +36,9 @@ class InstaPlayerUI {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
-    // Adjust Instagram video player overlay container height (calc(100% - 38px)) so bar sits cleanly underneath
-    this.videoPlayerWrapper = parent.querySelector('div[aria-label="Video player"]') ||
-                              this.video.closest('div[aria-label="Video player"]') ||
+    // Resilient multi-tiered lookup for Instagram video player wrapper (combining ARIA labels, semantic roles, class names, and DOM hierarchy)
+    this.videoPlayerWrapper = parent.querySelector('[aria-label="Video player"], [role="group"], [role="region"]') ||
+                              this.video.closest('[aria-label="Video player"]') ||
                               this.video.closest('div.x5yr21d') ||
                               this.video.parentElement;
 
@@ -47,8 +47,8 @@ class InstaPlayerUI {
       this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');
     }
 
-    // Disable pointer-events on native Instagram transparent click-intercepting overlays in parent
-    const nativeOverlays = parent.querySelectorAll('div._aav3, div[role="slider"], div[role="button"].x1i10hfl');
+    // Resilient query for native Instagram transparent click/volume overlay elements to disable pointer-events
+    const nativeOverlays = parent.querySelectorAll('div._aav3, [role="slider"], [role="button"].x1i10hfl, [aria-label*="Volume"], [aria-label*="Mute"]');
     nativeOverlays.forEach((overlay) => {
       if (overlay && !overlay.classList.contains('instaplayer-host')) {
         this.disabledOverlays.push({ element: overlay, prevPointer: overlay.style.pointerEvents });

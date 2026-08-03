@@ -11,8 +11,11 @@ class InstaPlayerUI {
     this.host = null;
     this.shadow = null;
     this.elements = {};
+    this.isUserSeeking = false;
 
     this.init();
+    this.bindEvents();
+    this.updateAllStates();
   }
 
   init() {
@@ -33,9 +36,10 @@ class InstaPlayerUI {
       .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; }
       .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; }
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
+      .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
       .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
       .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 4px; }
-      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; outline: none; cursor: pointer; }
+      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; cursor: pointer; }
       .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; cursor: pointer; }
       .ip-speed-wrapper { position: relative; }
       .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 10000; min-width: 64px; }
@@ -50,14 +54,14 @@ class InstaPlayerUI {
     const bar = document.createElement('div');
     bar.className = 'ip-bar';
     bar.innerHTML = `
-      <button class="ip-btn ip-play-btn" title="Play/Pause">▶</button>
-      <button class="ip-btn ip-mute-btn" title="Mute/Unmute">🔊</button>
+      <button class="ip-btn ip-play-btn" title="Play/Pause" aria-label="Play or pause video">▶</button>
+      <button class="ip-btn ip-mute-btn" title="Mute/Unmute" aria-label="Mute or unmute video">🔊</button>
       <span class="ip-time">0:00 / 0:00</span>
       <div class="ip-seeker-container">
-        <input type="range" class="ip-seeker" min="0" max="100" value="0" step="0.1">
+        <input type="range" class="ip-seeker" min="0" max="100" value="0" step="0.1" aria-label="Seek progress">
       </div>
       <div class="ip-speed-wrapper">
-        <button class="ip-btn ip-speed-btn" title="Playback Speed">1x</button>
+        <button class="ip-btn ip-speed-btn" title="Playback Speed" aria-label="Select playback speed">1x</button>
         <div class="ip-speed-menu">
           <button class="ip-speed-item" data-speed="0.25">0.25x</button>
           <button class="ip-speed-item" data-speed="0.5">0.5x</button>
@@ -70,7 +74,7 @@ class InstaPlayerUI {
           <button class="ip-speed-item" data-speed="3">3x</button>
         </div>
       </div>
-      <button class="ip-btn ip-fs-btn" title="Fullscreen">⛶</button>
+      <button class="ip-btn ip-fs-btn" title="Fullscreen" aria-label="Toggle fullscreen mode">⛶</button>
     `;
 
     this.shadow.appendChild(bar);
@@ -93,5 +97,120 @@ class InstaPlayerUI {
     }
 
     parent.appendChild(this.host);
+  }
+
+  bindEvents() {
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
+
+    // UI Click Handlers
+    playBtn.addEventListener('click', () => {
+      if (this.video.paused) {
+        this.video.play().catch(() => {});
+      } else {
+        this.video.pause();
+      }
+    });
+
+    muteBtn.addEventListener('click', () => {
+      this.video.muted = !this.video.muted;
+    });
+
+    seeker.addEventListener('mousedown', () => { this.isUserSeeking = true; });
+    seeker.addEventListener('touchstart', () => { this.isUserSeeking = true; }, { passive: true });
+
+    seeker.addEventListener('input', () => {
+      if (this.video.duration) {
+        const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
+        this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
+      }
+    });
+
+    const commitSeek = () => {
+      if (this.video.duration) {
+        this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
+      }
+      this.isUserSeeking = false;
+    };
+
+    seeker.addEventListener('change', commitSeek);
+    seeker.addEventListener('mouseup', commitSeek);
+    seeker.addEventListener('touchend', commitSeek);
+
+    speedBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speedMenu.classList.toggle('open');
+    });
+
+    speedItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        const rate = parseFloat(item.dataset.speed);
+        this.video.playbackRate = rate;
+        speedMenu.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!this.host.contains(e.target)) {
+        speedMenu.classList.remove('open');
+      }
+    });
+
+    fsBtn.addEventListener('click', () => {
+      const targetContainer = this.video.parentElement || this.video;
+      if (!document.fullscreenElement) {
+        if (targetContainer.requestFullscreen) {
+          targetContainer.requestFullscreen();
+        } else if (targetContainer.webkitRequestFullscreen) {
+          targetContainer.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    // Video Event Listeners
+    this.video.addEventListener('play', () => this.updatePlayState());
+    this.video.addEventListener('pause', () => this.updatePlayState());
+    this.video.addEventListener('volumechange', () => this.updateMuteState());
+    this.video.addEventListener('timeupdate', () => this.updateTimeState());
+    this.video.addEventListener('durationchange', () => this.updateTimeState());
+    this.video.addEventListener('ratechange', () => this.updateSpeedState());
+  }
+
+  updatePlayState() {
+    this.elements.playBtn.textContent = this.video.paused ? '▶' : '❚❚';
+  }
+
+  updateMuteState() {
+    this.elements.muteBtn.textContent = this.video.muted ? '🔇' : '🔊';
+  }
+
+  updateTimeState() {
+    if (!this.isUserSeeking && this.video.duration) {
+      const percent = (this.video.currentTime / this.video.duration) * 100;
+      this.elements.seeker.value = percent;
+    }
+    this.elements.timeLabel.textContent = `${formatTime(this.video.currentTime)} / ${formatTime(this.video.duration)}`;
+  }
+
+  updateSpeedState() {
+    const rate = this.video.playbackRate;
+    this.elements.speedBtn.textContent = `${rate}x`;
+    this.elements.speedItems.forEach((item) => {
+      if (parseFloat(item.dataset.speed) === rate) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+
+  updateAllStates() {
+    this.updatePlayState();
+    this.updateMuteState();
+    this.updateTimeState();
+    this.updateSpeedState();
   }
 }

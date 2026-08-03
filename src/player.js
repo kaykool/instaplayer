@@ -13,6 +13,7 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
+    this.userExplicitlyUnmuted = !videoElement.muted;
     this.boundHandlers = {};
 
     if (!this.init(customContainer)) {
@@ -60,11 +61,12 @@ class InstaPlayerUI {
     `;
     this.shadow.appendChild(style);
 
-    // Build Bar UI Template (No sound button)
+    // Build Bar UI Template (Includes sound button)
     const bar = document.createElement('div');
     bar.className = 'ip-bar';
     bar.innerHTML = `
       <button class="ip-btn ip-play-btn" title="Play/Pause" aria-label="Play or pause video">▶</button>
+      <button class="ip-btn ip-mute-btn" title="Mute/Unmute" aria-label="Mute or unmute video">🔊</button>
       <span class="ip-time">0:00 / 0:00</span>
       <div class="ip-seeker-container">
         <input type="range" class="ip-seeker" min="0" max="100" value="0" step="0.1" aria-label="Seek progress">
@@ -91,6 +93,7 @@ class InstaPlayerUI {
     // Cache elements
     this.elements = {
       playBtn: bar.querySelector('.ip-play-btn'),
+      muteBtn: bar.querySelector('.ip-mute-btn'),
       timeLabel: bar.querySelector('.ip-time'),
       seeker: bar.querySelector('.ip-seeker'),
       speedBtn: bar.querySelector('.ip-speed-btn'),
@@ -109,16 +112,31 @@ class InstaPlayerUI {
   }
 
   bindEvents() {
-    const { playBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
 
     // Define bound handlers for cleanup
     this.boundHandlers = {
       playClick: () => {
         if (this.video.paused) {
-          this.video.play().catch(() => {});
+          const promise = this.video.play();
+          if (promise && typeof promise.then === 'function') {
+            promise.then(() => {
+              if (this.userExplicitlyUnmuted && this.video.muted) {
+                this.video.muted = false;
+              }
+            }).catch(() => {});
+          } else {
+            if (this.userExplicitlyUnmuted && this.video.muted) {
+              this.video.muted = false;
+            }
+          }
         } else {
           this.video.pause();
         }
+      },
+      muteClick: () => {
+        this.video.muted = !this.video.muted;
+        this.userExplicitlyUnmuted = !this.video.muted;
       },
       seekerMousedown: () => { this.isUserSeeking = true; },
       seekerTouchstart: () => { this.isUserSeeking = true; },
@@ -157,8 +175,14 @@ class InstaPlayerUI {
           }
         }
       },
-      videoPlay: () => this.updatePlayState(),
+      videoPlay: () => {
+        this.updatePlayState();
+        if (this.userExplicitlyUnmuted && this.video.muted) {
+          this.video.muted = false;
+        }
+      },
       videoPause: () => this.updatePlayState(),
+      videoVolume: () => this.updateMuteState(),
       videoTime: () => this.updateTimeState(),
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
@@ -166,6 +190,7 @@ class InstaPlayerUI {
 
     // UI Listeners
     playBtn.addEventListener('click', this.boundHandlers.playClick);
+    muteBtn.addEventListener('click', this.boundHandlers.muteClick);
     seeker.addEventListener('mousedown', this.boundHandlers.seekerMousedown);
     seeker.addEventListener('touchstart', this.boundHandlers.seekerTouchstart, { passive: true });
     seeker.addEventListener('input', this.boundHandlers.seekerInput);
@@ -191,6 +216,7 @@ class InstaPlayerUI {
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);
     this.video.addEventListener('pause', this.boundHandlers.videoPause);
+    this.video.addEventListener('volumechange', this.boundHandlers.videoVolume);
     this.video.addEventListener('timeupdate', this.boundHandlers.videoTime);
     this.video.addEventListener('durationchange', this.boundHandlers.videoDuration);
     this.video.addEventListener('ratechange', this.boundHandlers.videoRate);
@@ -199,6 +225,12 @@ class InstaPlayerUI {
   updatePlayState() {
     if (this.elements.playBtn) {
       this.elements.playBtn.textContent = this.video.paused ? '▶' : '❚❚';
+    }
+  }
+
+  updateMuteState() {
+    if (this.elements.muteBtn) {
+      this.elements.muteBtn.textContent = this.video.muted ? '🔇' : '🔊';
     }
   }
 
@@ -228,6 +260,7 @@ class InstaPlayerUI {
 
   updateAllStates() {
     this.updatePlayState();
+    this.updateMuteState();
     this.updateTimeState();
     this.updateSpeedState();
   }
@@ -235,10 +268,11 @@ class InstaPlayerUI {
   destroy() {
     if (!this.host) return;
 
-    const { playBtn, seeker, speedBtn, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;
     const h = this.boundHandlers;
 
     if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
+    if (h.muteClick && muteBtn) muteBtn.removeEventListener('click', h.muteClick);
     if (seeker) {
       if (h.seekerMousedown) seeker.removeEventListener('mousedown', h.seekerMousedown);
       if (h.seekerTouchstart) seeker.removeEventListener('touchstart', h.seekerTouchstart);
@@ -261,6 +295,7 @@ class InstaPlayerUI {
     if (this.video && h.videoPlay) {
       this.video.removeEventListener('play', h.videoPlay);
       this.video.removeEventListener('pause', h.videoPause);
+      this.video.removeEventListener('volumechange', h.videoVolume);
       this.video.removeEventListener('timeupdate', h.videoTime);
       this.video.removeEventListener('durationchange', h.videoDuration);
       this.video.removeEventListener('ratechange', h.videoRate);

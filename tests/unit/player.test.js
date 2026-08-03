@@ -29,11 +29,12 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     expect(container.querySelector('.instaplayer-host')).toBe(playerUI.host);
   });
 
-  it('renders control elements inside Shadow Root', () => {
+  it('renders control elements inside Shadow Root including sound button', () => {
     const playerUI = new InstaPlayerUI(video);
     const shadow = playerUI.shadow;
 
     expect(shadow.querySelector('.ip-play-btn')).not.toBeNull();
+    expect(shadow.querySelector('.ip-mute-btn')).not.toBeNull();
     expect(shadow.querySelector('.ip-seeker')).not.toBeNull();
     expect(shadow.querySelector('.ip-speed-btn')).not.toBeNull();
     expect(shadow.querySelector('.ip-fs-btn')).not.toBeNull();
@@ -54,6 +55,17 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     Object.defineProperty(video, 'paused', { value: true, configurable: true });
     video.dispatchEvent(new Event('pause'));
     expect(playBtn.textContent).toBe('▶');
+  });
+
+  it('updates Mute icon state on video volumechange event', () => {
+    const playerUI = new InstaPlayerUI(video);
+    const muteBtn = playerUI.elements.muteBtn;
+
+    expect(muteBtn.textContent).toBe('🔊');
+
+    video.muted = true;
+    video.dispatchEvent(new Event('volumechange'));
+    expect(muteBtn.textContent).toBe('🔇');
   });
 
   it('destroys overlay and cleans up DOM host on destroy()', () => {

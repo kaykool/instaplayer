@@ -21,7 +21,7 @@ Development follows a **PR-per-Milestone** workflow:
 | **M1: Foundation & Boilerplate** | `feature/m1-boilerplate` | Setup & Manifest V3 configuration | `manifest.json`, icon assets, project scaffolding | Day 1 |
 | **M2: Dynamic DOM Injection** | `feature/m2-dom-injection` | Instagram SPA video detection | MutationObserver, wrapper injection, Shadow DOM isolation | Day 2 |
 | **M3: Bare-Minimum Player Overlay UI** | `feature/m3-bare-ui` | Minimal, flat high-contrast layout | Simple control bar layout, progress bar, high-contrast icons, speed popup | Day 3 |
-| **M4: Media Event Sync & Interactive Logic** | `feature/m4-media-sync` | HTML5 Video API bindings | Play/Pause, Seek, Speed menu, Fullscreen | Day 4 |
+| **M4: Media Event Sync & Interactive Logic** | `feature/m4-media-sync` | HTML5 Video API bindings | Play/Pause, Mute/Unmute, Seek, Speed menu, Fullscreen | Day 4 |
 | **M5: Multi-Context Instagram Testing** | `feature/m5-testing` | Cross-view testing & edge cases | Reels, Feed carousels, Explore modal, Stories support | Day 5 |
 | **M6: Packaging & Store Readiness** | `feature/m6-packaging` | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 |
 
@@ -63,15 +63,15 @@ Development follows a **PR-per-Milestone** workflow:
 ### Milestone 3: Bare-Minimum Player Overlay UI
 - **Branch**: `feature/m3-bare-ui`
 - [x] Design minimal, flat CSS layout in `shadow-styles.css`.
-- [x] Build HTML template generator for control bar elements inside Shadow Root (Play/Pause, Time label, Seeker, Speed popup, Fullscreen).
+- [x] Build HTML template generator for control bar elements inside Shadow Root (Play/Pause, Mute, Time label, Seeker, Speed popup, Fullscreen).
 - [x] Build minimal floating Speed Popup menu.
 
 ---
 
 ### Milestone 4: Media Event Sync & Interactive Logic
 - **Branch**: `feature/m4-media-sync`
-- [x] Bind HTML5 `<video>` element events to UI state updates (`timeupdate`, `durationchange`, `play`, `pause`, `ratechange`).
-- [x] Bind UI interaction handlers to `<video>` properties (Play/Pause click, Seeker drag, Speed menu, Fullscreen).
+- [x] Bind HTML5 `<video>` element events to UI state updates (`timeupdate`, `durationchange`, `play`, `pause`, `volumechange`, `ratechange`).
+- [x] Bind UI interaction handlers to `<video>` properties (Play/Pause click, Mute click, Seeker drag, Speed menu, Fullscreen).
 
 ---
 

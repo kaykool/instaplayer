@@ -13,13 +13,14 @@ InstaPlayer overlays a high-contrast, flat dark control bar docked at the bottom
 | INSTAGRAM VIDEO CONTENT                                                                       |
 |                                                                                               |
 | +-------------------------------------------------------------------------------------------+ |
-| |  ▶   0:35 / 0:35  [===================o================]               1x   ⛶         | |
+| |  ▶   🔊  0:35 / 0:35  [===================o================]               1x   ⛶         | |
 | +-------------------------------------------------------------------------------------------+ |
 +-----------------------------------------------------------------------------------------------+
 ```
 
 ### Key Controls & Features:
 * **Play / Pause**: One-click play/pause toggle.
+* **Mute / Volume**: Toggle mute state cleanly (`🔊` / `🔇`). Preserves unmuted state on play resume.
 * **Time Counter**: Clean `MM:SS / MM:SS` time display with monospaced tabular numbers.
 * **Interactive Progress Bar**: High-contrast seek bar with white progress fill and circular thumb handle.
 * **Playback Speed Menu**: Click `1x` to open a popup preset menu (`0.25x`, `0.5x`, `0.75x`, `1x`, `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`).

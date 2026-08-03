@@ -92,7 +92,7 @@ sequenceDiagram
     alt Video found & not yet processed
         CS->>V: Set attribute data-instaplayer-attached="true"
         CS->>SD: Instantiates InstaPlayer ShadowRoot inside wrapper
-        SD->>V: Binds HTML5 media listeners (timeupdate, play, pause)
+        SD->>V: Binds HTML5 media listeners (timeupdate, play, pause, volumechange)
         SD->>SD: Render Bare-Minimum Control Bar UI
     end
 ```
@@ -102,6 +102,7 @@ sequenceDiagram
 | User Trigger | Shadow DOM UI Handler | Target `<video>` Action | Event Listener Callback |
 |---|---|---|---|
 | Click Play/Pause Button | `onPlayPauseClick()` | `video.paused ? video.play() : video.pause()` | `play` / `pause` updates UI icon |
+| Click Mute Button | `onMuteClick()` | `video.muted = !video.muted` | `volumechange` updates UI Mute icon |
 | Drag Progress Bar | `onSeekInput(val)` | `video.currentTime = (val / 100) * video.duration` | `timeupdate` moves progress thumb |
 | Click Speed Preset | `onSpeedSelect(rate)` | `video.playbackRate = rate` | UI speed button text updates to `rate + 'x'` |
 | Click Fullscreen | `onFullscreenClick()` | `wrapper.requestFullscreen()` | Fullscreen state toggles |

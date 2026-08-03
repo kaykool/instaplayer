@@ -8,17 +8,17 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the outer interactive video container for Instagram videos
-   * Ensures player host is placed at top DOM order above Instagram's click-to-pause overlays
+   * Find the video media frame wrapper for Instagram videos
+   * Anchors player bar strictly to video box frame (above post footer / comments on /p/ pages)
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // Target outer video wrapper across Reels, Feed Posts, Explore, and Stories
-    const container = video.closest('div._aaqg, div._aakw, article, div._abm0, div[role="dialog"]');
-    if (container) return container;
+    // Target immediate video media box wrapper across Reels, Feed Posts (/p/), Explore, and Stories
+    const mediaBox = video.closest('div._aabw, div._aamv, div._aaqg, div._aakw');
+    if (mediaBox) return mediaBox;
 
     return video.parentElement;
   }

@@ -90,4 +90,3 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 ### 5.2 Performance & Footprint
 * Zero external JS/CSS dependencies.
 * Ultra-fast rendering: no GPU backdrop-filter overhead.
-* Memory footprint: < 1.5 MB.

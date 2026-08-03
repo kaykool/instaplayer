@@ -21,13 +21,17 @@ Overlays a high-contrast dark control bar at the bottom of Instagram videos:
 - **Time Counter**: `MM:SS / MM:SS` display with tabular numbers.
 - **Progress Bar**: seek bar with white progress fill and thumb handle.
 - **Playback Speed**: `1x` button opens preset menu (0.25x–3x).
-- **Stateless & Lightweight**: zero external dependencies, < 1.5MB memory footprint.
+- **Stateless & Lightweight**: zero external dependencies, no persistent storage.
 
 ## Install
 
 Load unpacked in Chrome or any Chromium browser (Edge, Brave, Vivaldi):
 
-1. Go to `chrome://extensions`, enable **Developer mode**.
+1. Open the extension management page, enable **Developer mode**:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+   - Brave: `brave://extensions`
+   - Vivaldi: `vivaldi://extensions`
 2. Click **Load unpacked**, select this directory (contains `manifest.json`).
 3. Open [Instagram](https://www.instagram.com) — the control bar appears on videos.
 

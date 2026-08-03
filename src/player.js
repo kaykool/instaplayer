@@ -141,6 +141,7 @@ class InstaPlayerUI {
       parent.style.position = 'relative';
     }
 
+    // Append host as last child of parent
     parent.appendChild(this.host);
     return true;
   }

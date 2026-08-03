@@ -8,30 +8,34 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the optimal outer container for Instagram video card
-   * Priority:
-   * 1. div[data-instancekey] (Instagram's primary wrapper for video + overlay components)
-   * 2. div._aaqg (Reels card)
-   * 3. div._aabw / div._abm0 / div._aakw (Feed post media box)
+   * Find the optimal outer container for Instagram video card.
+   * Finds the common ancestor container wrapping both <video> AND Instagram's native overlay layers
+   * (div[data-instancekey], div[aria-label="Video player"]), ensuring instaplayer-host is appended LAST.
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // 1. Instagram wrapper containing video element & native overlay components
-    const instanceKeyContainer = video.closest('div[data-instancekey]');
-    if (instanceKeyContainer) return instanceKeyContainer;
+    // 1. Locate outer video post or reel card ancestor
+    const card = video.closest('article, div[role="dialog"], div._aaqg, div._aabw, div._abm0, div._aakw');
+    if (card) {
+      // If card contains div[data-instancekey] (Instagram's top overlay box), return it so host is appended inside as last child
+      const instanceKeyBox = card.querySelector('div[data-instancekey]');
+      if (instanceKeyBox) return instanceKeyBox;
+      return card;
+    }
 
-    // 2. Instagram Reels (vertical reel card container)
-    const reelBox = video.closest('div._aaqg');
-    if (reelBox) return reelBox;
+    // 2. Check direct parent hierarchy for div[data-instancekey]
+    let current = video.parentElement;
+    while (current && current !== document.body) {
+      const instanceKeyBox = current.querySelector ? current.querySelector('div[data-instancekey]') : null;
+      if (instanceKeyBox) return instanceKeyBox;
+      if (current.matches && current.matches('div._aabw, div._abm0, div._aaqg, div._aakw')) return current;
+      current = current.parentElement;
+    }
 
-    // 3. Posts (/p/ pages, feed posts, explore lightbox): outer video frame card
-    const mediaBox = video.closest('div._aabw, div._abm0, div._aakw, div._aamv');
-    if (mediaBox) return mediaBox;
-
-    // 4. Fallback to direct video parent element
+    // 3. Fallback to video parent
     return video.parentElement;
   }
 

@@ -8,35 +8,54 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the optimal outer container for Instagram video card.
-   * Finds the common ancestor container wrapping both <video> AND Instagram's native overlay layers
-   * (div[data-instancekey], div[aria-label="Video player"]), ensuring instaplayer-host is appended LAST.
+   * Robust Multi-Tiered Container Resolver.
+   * Resilient to Instagram CSS class renames/obfuscation.
+   * Priority:
+   * 1. Semantic attributes (div[data-instancekey])
+   * 2. ARIA & HTML5 Semantic elements (article, div[role="dialog"], [role="region"])
+   * 3. Known CSS class selectors (div._aaqg, div._aabw, div._abm0, div._aakw)
+   * 4. Structural Computed Style Traversal (highest positioned parent wrapper)
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // 1. Locate outer video post or reel card ancestor
-    const card = video.closest('article, div[role="dialog"], div._aaqg, div._aabw, div._abm0, div._aakw');
-    if (card) {
-      // If card contains div[data-instancekey] (Instagram's top overlay box), return it so host is appended inside as last child
-      const instanceKeyBox = card.querySelector('div[data-instancekey]');
+    // Tier 1 & 2: WAI-ARIA & Semantic HTML5 containers (article, post modals, reel views)
+    const semanticCard = video.closest('article, div[role="dialog"], [role="region"], [role="presentation"], div._aaqg, div._aabw, div._abm0, div._aakw');
+    if (semanticCard) {
+      const instanceKeyBox = semanticCard.querySelector('div[data-instancekey]');
       if (instanceKeyBox) return instanceKeyBox;
-      return card;
+      return semanticCard;
     }
 
-    // 2. Check direct parent hierarchy for div[data-instancekey]
+    // Tier 3: Parent hierarchy traversal for data-instancekey or class matches
     let current = video.parentElement;
+    let highestPositionedParent = video.parentElement;
+
     while (current && current !== document.body) {
       const instanceKeyBox = current.querySelector ? current.querySelector('div[data-instancekey]') : null;
       if (instanceKeyBox) return instanceKeyBox;
-      if (current.matches && current.matches('div._aabw, div._abm0, div._aaqg, div._aakw')) return current;
+
+      if (current.matches && current.matches('div._aabw, div._abm0, div._aaqg, div._aakw')) {
+        return current;
+      }
+
+      // Track positioned containers (relative/absolute) as structural fallbacks
+      try {
+        const pos = window.getComputedStyle(current).position;
+        if (pos === 'relative' || pos === 'absolute' || pos === 'fixed') {
+          highestPositionedParent = current;
+        }
+      } catch {
+        // Fallback for detached elements
+      }
+
       current = current.parentElement;
     }
 
-    // 3. Fallback to video parent
-    return video.parentElement;
+    // Tier 4: Structural fallback to highest positioned parent or direct parent
+    return highestPositionedParent || video.parentElement;
   }
 
   /**

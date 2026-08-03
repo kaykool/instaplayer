@@ -16,14 +16,14 @@ Development follows a **PR-per-Milestone** workflow:
 
 ## Milestone Summary
 
-| Milestone | Branch Name | Focus | Deliverables | Target Timeline |
-|---|---|---|---|---|
-| **M1: Foundation & Boilerplate** | `feature/m1-boilerplate` | Setup & Manifest V3 configuration | `manifest.json`, icon assets, project scaffolding | Day 1 |
-| **M2: Dynamic DOM Injection** | `feature/m2-dom-injection` | Instagram SPA video detection | MutationObserver, wrapper injection, Shadow DOM isolation | Day 2 |
-| **M3: Bare-Minimum Player Overlay UI** | `feature/m3-bare-ui` | Minimal, flat high-contrast layout | Simple control bar layout, progress bar, high-contrast icons, speed popup | Day 3 |
-| **M4: Media Event Sync & Interactive Logic** | `feature/m4-media-sync` | HTML5 Video API bindings | Play/Pause, Mute/Unmute, Seek, Speed menu, Fullscreen | Day 4 |
-| **M5: Multi-Context Instagram Testing** | `feature/m5-testing` | Cross-view testing & edge cases | Reels, Feed carousels, Explore modal, Stories support | Day 5 |
-| **M6: Packaging & Store Readiness** | `feature/m6-packaging` | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 |
+| Milestone | Branch Name | Focus | Deliverables | Target Timeline | Status |
+|---|---|---|---|---|---|
+| **M1: Foundation & Boilerplate** | `feature/m1-boilerplate` | Setup & Manifest V3 configuration | `manifest.json`, icon assets, project scaffolding | Day 1 | Completed |
+| **M2: Dynamic DOM Injection** | `feature/m2-dom-injection` | Instagram SPA video detection | MutationObserver, wrapper injection, Shadow DOM isolation | Day 2 | Completed & Merged |
+| **M3: Bare-Minimum Player Overlay UI** | `feature/m3-bare-ui` | Minimal, flat high-contrast layout | Simple control bar layout, progress bar, high-contrast icons, speed popup | Day 3 | Completed |
+| **M4: Media Event Sync & Interactive Logic** | `feature/m4-media-sync` | HTML5 Video API bindings | Play/Pause, Mute/Unmute, Seek, Speed menu, Fullscreen | Day 4 | Completed |
+| **M5: Multi-Context Instagram Testing** | `feature/m5-testing` | Cross-view testing & edge cases | Reels, Feed carousels, Explore modal, Stories support | Day 5 | Completed |
+| **M6: Packaging & Store Readiness** | `feature/m6-packaging` | Build optimization & publishing | Minified build scripts, store assets, documentation | Day 6 | In Progress |
 
 ---
 
@@ -57,6 +57,8 @@ Development follows a **PR-per-Milestone** workflow:
 - [x] Identify Instagram video container selectors (Reels, Feed posts, Explore popups, Stories).
 - [x] Implement Shadow DOM isolation layer (`attachShadow({ mode: 'open' })`).
 - [x] Implement attribute guard (`data-instaplayer-attached="true"`).
+- [x] Resolve `div[data-instancekey]` DOM stacking hierarchy & overlay mask suppression.
+- [x] Merged to `main`.
 
 ---
 

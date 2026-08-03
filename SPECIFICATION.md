@@ -1,7 +1,7 @@
 # InstaPlayer - Chrome Extension Specification
 
 ## 1. Overview
-**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, audio muting, and fullscreen controls without visual distraction.
+**InstaPlayer** is a lightweight, minimalistic Chrome Extension designed specifically for Instagram (Reels, Feed video posts, Explore modal, and Stories). It automatically attaches a clean, bare-minimum HTML5 video player control bar directly to Instagram video containers, providing effortless access to playback speed, precision seeking, time tracking, and audio muting without visual distraction.
 
 ---
 
@@ -30,17 +30,17 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 |                                                                                               |
 |                                                                                               |
 | +-------------------------------------------------------------------------------------------+ |
-| | [> / ||]  [Vol]  0:35 / 0:35  [===================o================]         [1x]    [FS] | |
+| | [> / ||]  [Vol]  0:35 / 0:35  [===================o================]         [1x]         | |
 | +-------------------------------------------------------------------------------------------+ |
 +-----------------------------------------------------------------------------------------------+
 ```
 
-* **Position**: Docked at the bottom of the video wrapper container (`position: absolute; bottom: 0; left: 0; right: 0; z-index: 9999;`).
+* **Position**: Docked at the bottom of the video wrapper container (`position: absolute; bottom: 0; left: 0; right: 0; z-index: 2147483647;`).
 * **Visibility Mode**: Always visible docked bar without auto-hiding for instant readability and ease of operation.
 * **Background Style**: Ultra-clean, high-contrast flat layout:
-  * Background: Solid dark opacity `rgba(0, 0, 0, 0.75)` or `#121212` for optimal contrast against video backgrounds.
-  * Border: Simple top border `1px solid rgba(255, 255, 255, 0.1)`.
-  * Height: Compact `36px` to `40px`.
+  * Background: Solid dark opacity `rgba(0, 0, 0, 0.85)` or `#121212` for optimal contrast against video backgrounds.
+  * Border: Simple top border `1px solid rgba(255, 255, 255, 0.12)`.
+  * Height: Compact `38px`.
   * Padding: `0 12px`.
 * **Typography**: Clean system sans-serif font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`).
   * Time Display: `12px`, tabular monospaced numbers (`font-variant-numeric: tabular-nums`).
@@ -69,7 +69,7 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 ### 4.4 Interactive Progress / Seek Bar
 * **Track**: Simple high-contrast track (`rgba(255, 255, 255, 0.3)`).
 * **Progress Fill**: Solid bright white fill (`#ffffff`) indicating current timestamp.
-* **Scrubber Thumb**: Compact 10px circular white thumb indicator for easy scrubbing.
+* **Scrubber Thumb**: Compact 16px circular white thumb indicator for easy scrubbing.
 * **Interaction**: Click or drag to jump to target timestamp (`video.currentTime = seekPercentage * video.duration`).
 
 ### 4.5 Playback Speed Control (`[1x]`)
@@ -77,9 +77,6 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 * **Interaction**: Click opens a clean, minimal popup preset menu.
 * **Speed Presets**: `0.25x`, `0.5x`, `0.75x`, `1x` (Default), `1.25x`, `1.5x`, `1.75x`, `2x`, `3x`.
 * **Behavior**: Selecting an option updates `video.playbackRate` immediately.
-
-### 4.6 Fullscreen Toggle (`[⛶]`)
-* **Interaction**: Toggles fullscreen mode for the parent video wrapper (`wrapper.requestFullscreen()` / `document.exitFullscreen()`).
 
 ---
 

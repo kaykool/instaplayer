@@ -37,7 +37,7 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     expect(shadow.querySelector('.ip-mute-btn')).not.toBeNull();
     expect(shadow.querySelector('.ip-seeker')).not.toBeNull();
     expect(shadow.querySelector('.ip-speed-btn')).not.toBeNull();
-    expect(shadow.querySelector('.ip-fs-btn')).not.toBeNull();
+    expect(shadow.querySelector('.ip-fs-btn')).toBeNull();
   });
 
   it('updates Play/Pause icon state on video play/pause events', () => {

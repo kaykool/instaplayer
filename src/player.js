@@ -13,11 +13,19 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
-    this.userExplicitlyUnmuted = !videoElement.muted;
+    this.targetPlaybackRate = (typeof videoElement.playbackRate === 'number' && videoElement.playbackRate > 0) ? videoElement.playbackRate : 1;
+    this.userExplicitlyUnmuted = true;
     this.boundHandlers = {};
     this.videoPlayerWrapper = null;
     this.originalWrapperHeight = '';
     this.disabledOverlays = [];
+
+    // Attempt sound on start
+    try {
+      this.video.muted = false;
+    } catch {
+      // Ignore browser autoplay restriction
+    }
 
     if (!this.init(customContainer)) {
       return;
@@ -36,9 +44,9 @@ class InstaPlayerUI {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
 
-    // Adjust Instagram video player overlay container height (calc(100% - 38px)) so bar sits cleanly underneath
-    this.videoPlayerWrapper = parent.querySelector('div[aria-label="Video player"]') ||
-                              this.video.closest('div[aria-label="Video player"]') ||
+    // Resilient multi-tiered lookup for Instagram video player wrapper (combining ARIA labels, semantic roles, class names, and DOM hierarchy)
+    this.videoPlayerWrapper = parent.querySelector('[aria-label="Video player"], [role="group"], [role="region"]') ||
+                              this.video.closest('[aria-label="Video player"]') ||
                               this.video.closest('div.x5yr21d') ||
                               this.video.parentElement;
 
@@ -47,8 +55,8 @@ class InstaPlayerUI {
       this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');
     }
 
-    // Disable pointer-events on native Instagram transparent click-intercepting overlays in parent
-    const nativeOverlays = parent.querySelectorAll('div._aav3, div[role="slider"], div[role="button"].x1i10hfl');
+    // Resilient query for native Instagram transparent click/volume overlay elements to disable pointer-events
+    const nativeOverlays = parent.querySelectorAll('div._aav3, [role="slider"], [role="button"].x1i10hfl, [aria-label*="Volume"], [aria-label*="Mute"]');
     nativeOverlays.forEach((overlay) => {
       if (overlay && !overlay.classList.contains('instaplayer-host')) {
         this.disabledOverlays.push({ element: overlay, prevPointer: overlay.style.pointerEvents });
@@ -119,7 +127,6 @@ class InstaPlayerUI {
           <button class="ip-speed-item" data-speed="3">3x</button>
         </div>
       </div>
-      <button class="ip-btn ip-fs-btn" title="Fullscreen" aria-label="Toggle fullscreen mode">⛶</button>
     `;
 
     this.shadow.appendChild(bar);
@@ -132,8 +139,7 @@ class InstaPlayerUI {
       seeker: bar.querySelector('.ip-seeker'),
       speedBtn: bar.querySelector('.ip-speed-btn'),
       speedMenu: bar.querySelector('.ip-speed-menu'),
-      speedItems: bar.querySelectorAll('.ip-speed-item'),
-      fsBtn: bar.querySelector('.ip-fs-btn')
+      speedItems: bar.querySelectorAll('.ip-speed-item')
     };
 
     // Ensure parent position is relative/absolute
@@ -147,19 +153,42 @@ class InstaPlayerUI {
   }
 
   bindEvents() {
-    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems } = this.elements;
 
-    // Helper to stop event propagation so Instagram click-to-pause handlers do not intercept control clicks
+    // Helper to stop event propagation and prevent default link redirection
     const stopEvt = (e) => {
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      }
+    };
+
+    // Helper to stop propagation without preventDefault (allows native range slider input/focus)
+    const stopEvtNoPrevent = (e) => {
       if (e) {
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
         if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
       }
     };
 
-    // Bubble-phase event traps on host to stop events from escaping to Instagram outer container
+    // Host event traps using composedPath to accurately unmask retargeted Shadow DOM elements
     ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
-      this.host.addEventListener(evtType, stopEvt, false);
+      this.host.addEventListener(evtType, (e) => {
+        const path = e.composedPath ? e.composedPath() : [];
+        const realTarget = path[0] || e.target;
+        const isSeeker = realTarget && realTarget.classList && realTarget.classList.contains('ip-seeker');
+
+        if (isSeeker) {
+          if (evtType === 'click') {
+            stopEvt(e);
+          } else {
+            stopEvtNoPrevent(e);
+          }
+        } else {
+          stopEvt(e);
+        }
+      }, false);
     });
 
     // Define bound handlers for cleanup
@@ -171,12 +200,20 @@ class InstaPlayerUI {
           if (promise && typeof promise.then === 'function') {
             promise.then(() => {
               if (this.userExplicitlyUnmuted && this.video.muted) {
-                this.video.muted = false;
+                try {
+                  this.video.muted = false;
+                } catch {
+                  // Ignore
+                }
               }
             }).catch(() => {});
           } else {
             if (this.userExplicitlyUnmuted && this.video.muted) {
-              this.video.muted = false;
+              try {
+                this.video.muted = false;
+              } catch {
+                // Ignore
+              }
             }
           }
         } else {
@@ -189,26 +226,34 @@ class InstaPlayerUI {
         this.userExplicitlyUnmuted = !this.video.muted;
       },
       seekerMousedown: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         this.isUserSeeking = true;
       },
       seekerTouchstart: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         this.isUserSeeking = true;
       },
       seekerInput: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         if (this.video.duration) {
           const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
           this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
         }
       },
       commitSeek: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         if (this.video.duration) {
           this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
         }
         this.isUserSeeking = false;
+      },
+      cancelSeek: () => {
+        // touchcancel fires without touchend/change; reset flag so time updates resume
+        this.isUserSeeking = false;
+        this.updateTimeState();
+      },
+      seekerClick: (e) => {
+        stopEvt(e);
       },
       speedBtnClick: (e) => {
         stopEvt(e);
@@ -219,30 +264,35 @@ class InstaPlayerUI {
           speedMenu.classList.remove('open');
         }
       },
-      fsClick: (e) => {
-        stopEvt(e);
-        const targetContainer = this.host.parentElement || this.video.parentElement || this.video;
-        if (!document.fullscreenElement) {
-          if (targetContainer.requestFullscreen) {
-            targetContainer.requestFullscreen();
-          } else if (targetContainer.webkitRequestFullscreen) {
-            targetContainer.webkitRequestFullscreen();
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          }
-        }
-      },
       videoPlay: () => {
         this.updatePlayState();
         if (this.userExplicitlyUnmuted && this.video.muted) {
-          this.video.muted = false;
+          try {
+            this.video.muted = false;
+          } catch {
+            // Ignore error
+          }
+        }
+        if (this.targetPlaybackRate && this.video.playbackRate !== this.targetPlaybackRate) {
+          try {
+            this.video.playbackRate = this.targetPlaybackRate;
+          } catch {
+            // Ignore error
+          }
         }
       },
       videoPause: () => this.updatePlayState(),
       videoVolume: () => this.updateMuteState(),
-      videoTime: () => this.updateTimeState(),
+      videoTime: () => {
+        this.updateTimeState();
+        if (this.userExplicitlyUnmuted && this.video.muted) {
+          try {
+            this.video.muted = false;
+          } catch {
+            // Ignore error
+          }
+        }
+      },
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
     };
@@ -256,6 +306,8 @@ class InstaPlayerUI {
     seeker.addEventListener('change', this.boundHandlers.commitSeek);
     seeker.addEventListener('mouseup', this.boundHandlers.commitSeek);
     seeker.addEventListener('touchend', this.boundHandlers.commitSeek);
+    seeker.addEventListener('touchcancel', this.boundHandlers.cancelSeek);
+    seeker.addEventListener('click', this.boundHandlers.seekerClick);
 
     speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
     this.speedItemHandlers = [];
@@ -263,6 +315,7 @@ class InstaPlayerUI {
       const handler = (e) => {
         stopEvt(e);
         const rate = parseFloat(item.dataset.speed);
+        this.targetPlaybackRate = rate;
         this.video.playbackRate = rate;
         speedMenu.classList.remove('open');
       };
@@ -271,7 +324,6 @@ class InstaPlayerUI {
     });
 
     document.addEventListener('click', this.boundHandlers.documentClick);
-    fsBtn.addEventListener('click', this.boundHandlers.fsClick);
 
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);
@@ -305,11 +357,13 @@ class InstaPlayerUI {
 
   updateSpeedState() {
     if (!this.elements.speedBtn) return;
-    const rate = this.video.playbackRate;
-    this.elements.speedBtn.textContent = `${rate}x`;
+    const currentRate = this.video.playbackRate;
+    const displayRate = (typeof currentRate === 'number' && currentRate > 0) ? currentRate : (this.targetPlaybackRate || 1);
+
+    this.elements.speedBtn.textContent = `${displayRate}x`;
     if (this.elements.speedItems) {
       this.elements.speedItems.forEach((item) => {
-        if (parseFloat(item.dataset.speed) === rate) {
+        if (parseFloat(item.dataset.speed) === displayRate) {
           item.classList.add('active');
         } else {
           item.classList.remove('active');
@@ -351,7 +405,7 @@ class InstaPlayerUI {
       this.disabledOverlays = [];
     }
 
-    const { playBtn, muteBtn, seeker, speedBtn, fsBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn } = this.elements;
     const h = this.boundHandlers;
 
     if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
@@ -364,7 +418,9 @@ class InstaPlayerUI {
         seeker.removeEventListener('change', h.commitSeek);
         seeker.removeEventListener('mouseup', h.commitSeek);
         seeker.removeEventListener('touchend', h.commitSeek);
+      if (h.cancelSeek) seeker.removeEventListener('touchcancel', h.cancelSeek);
       }
+      if (h.seekerClick) seeker.removeEventListener('click', h.seekerClick);
     }
     if (h.speedBtnClick && speedBtn) speedBtn.removeEventListener('click', h.speedBtnClick);
     if (this.speedItemHandlers) {
@@ -373,7 +429,6 @@ class InstaPlayerUI {
       });
     }
     if (h.documentClick) document.removeEventListener('click', h.documentClick);
-    if (h.fsClick && fsBtn) fsBtn.removeEventListener('click', h.fsClick);
 
     if (this.video && h.videoPlay) {
       this.video.removeEventListener('play', h.videoPlay);

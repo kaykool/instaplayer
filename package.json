@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "test": "vitest run"
+    "test": "vitest run",
+    "package": "node scripts/package.mjs"
   },
   "repository": {
     "type": "git",

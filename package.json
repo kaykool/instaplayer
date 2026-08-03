@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -21,7 +23,10 @@
   "homepage": "https://github.com/kaykool/instaplayer#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "eslint": "^10.8.0",
-    "globals": "^17.9.0"
+    "globals": "^17.9.0",
+    "jsdom": "^30.0.1",
+    "vitest": "^4.1.10"
   }
 }

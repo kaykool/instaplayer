@@ -33,3 +33,7 @@ function debounce(func, wait) {
     timeout = setTimeout(later, wait);
   };
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { formatTime, debounce };
+}

@@ -14,11 +14,18 @@ class InstaPlayerUI {
     this.elements = {};
     this.isUserSeeking = false;
     this.targetPlaybackRate = (typeof videoElement.playbackRate === 'number' && videoElement.playbackRate > 0) ? videoElement.playbackRate : 1;
-    this.userExplicitlyUnmuted = !videoElement.muted;
+    this.userExplicitlyUnmuted = true;
     this.boundHandlers = {};
     this.videoPlayerWrapper = null;
     this.originalWrapperHeight = '';
     this.disabledOverlays = [];
+
+    // Attempt sound on start
+    try {
+      this.video.muted = false;
+    } catch {
+      // Ignore browser autoplay restriction
+    }
 
     if (!this.init(customContainer)) {
       return;
@@ -193,12 +200,20 @@ class InstaPlayerUI {
           if (promise && typeof promise.then === 'function') {
             promise.then(() => {
               if (this.userExplicitlyUnmuted && this.video.muted) {
-                this.video.muted = false;
+                try {
+                  this.video.muted = false;
+                } catch {
+                  // Ignore
+                }
               }
             }).catch(() => {});
           } else {
             if (this.userExplicitlyUnmuted && this.video.muted) {
-              this.video.muted = false;
+              try {
+                this.video.muted = false;
+              } catch {
+                // Ignore
+              }
             }
           }
         } else {
@@ -247,7 +262,11 @@ class InstaPlayerUI {
       videoPlay: () => {
         this.updatePlayState();
         if (this.userExplicitlyUnmuted && this.video.muted) {
-          this.video.muted = false;
+          try {
+            this.video.muted = false;
+          } catch {
+            // Ignore error
+          }
         }
         if (this.targetPlaybackRate && this.video.playbackRate !== this.targetPlaybackRate) {
           try {
@@ -259,7 +278,16 @@ class InstaPlayerUI {
       },
       videoPause: () => this.updatePlayState(),
       videoVolume: () => this.updateMuteState(),
-      videoTime: () => this.updateTimeState(),
+      videoTime: () => {
+        this.updateTimeState();
+        if (this.userExplicitlyUnmuted && this.video.muted) {
+          try {
+            this.video.muted = false;
+          } catch {
+            // Ignore error
+          }
+        }
+      },
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
     };

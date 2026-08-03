@@ -147,7 +147,7 @@ class InstaPlayerUI {
   bindEvents() {
     const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems } = this.elements;
 
-    // Helper to stop event propagation and prevent default link redirection (e.g. main feed reel link redirection)
+    // Helper to stop event propagation and prevent default link redirection
     const stopEvt = (e) => {
       if (e) {
         if (typeof e.preventDefault === 'function') e.preventDefault();
@@ -156,9 +156,28 @@ class InstaPlayerUI {
       }
     };
 
+    // Helper to stop propagation without preventDefault (allows native range slider input/focus)
+    const stopEvtNoPrevent = (e) => {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      }
+    };
+
     // Bubble-phase event traps on host to stop events from escaping to Instagram outer container
     ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
-      this.host.addEventListener(evtType, stopEvt, false);
+      this.host.addEventListener(evtType, (e) => {
+        // Do not call preventDefault on input[type="range"] mousedown/touchstart/pointerdown so slider can drag
+        if (e && e.target && e.target.classList && e.target.classList.contains('ip-seeker')) {
+          if (evtType === 'click') {
+            stopEvt(e);
+          } else {
+            stopEvtNoPrevent(e);
+          }
+        } else {
+          stopEvt(e);
+        }
+      }, false);
     });
 
     // Define bound handlers for cleanup
@@ -188,26 +207,29 @@ class InstaPlayerUI {
         this.userExplicitlyUnmuted = !this.video.muted;
       },
       seekerMousedown: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         this.isUserSeeking = true;
       },
       seekerTouchstart: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         this.isUserSeeking = true;
       },
       seekerInput: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         if (this.video.duration) {
           const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
           this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
         }
       },
       commitSeek: (e) => {
-        stopEvt(e);
+        stopEvtNoPrevent(e);
         if (this.video.duration) {
           this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
         }
         this.isUserSeeking = false;
+      },
+      seekerClick: (e) => {
+        stopEvt(e);
       },
       speedBtnClick: (e) => {
         stopEvt(e);
@@ -240,6 +262,7 @@ class InstaPlayerUI {
     seeker.addEventListener('change', this.boundHandlers.commitSeek);
     seeker.addEventListener('mouseup', this.boundHandlers.commitSeek);
     seeker.addEventListener('touchend', this.boundHandlers.commitSeek);
+    seeker.addEventListener('click', this.boundHandlers.seekerClick);
 
     speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
     this.speedItemHandlers = [];
@@ -348,6 +371,7 @@ class InstaPlayerUI {
         seeker.removeEventListener('mouseup', h.commitSeek);
         seeker.removeEventListener('touchend', h.commitSeek);
       }
+      if (h.seekerClick) seeker.removeEventListener('click', h.seekerClick);
     }
     if (h.speedBtnClick && speedBtn) speedBtn.removeEventListener('click', h.speedBtnClick);
     if (this.speedItemHandlers) {

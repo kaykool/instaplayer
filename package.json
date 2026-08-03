@@ -1,0 +1,27 @@
+{
+  "name": "instaplayer",
+  "version": "1.0.0",
+  "description": "> A lightweight, bare-minimum Chrome Extension that embeds a simple, easy-to-operate video player control bar directly onto Instagram Reels, Feed posts, Explore videos, and Stories.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaykool/instaplayer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kaykool/instaplayer/issues"
+  },
+  "homepage": "https://github.com/kaykool/instaplayer#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.9.0"
+  }
+}

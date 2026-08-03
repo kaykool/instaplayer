@@ -9,23 +9,23 @@
 
   /**
    * Find the optimal video container for Instagram videos
-   * - Reels view & modals: div._aaqg / div[role="dialog"] (outer reel container)
-   * - Posts & /p/ pages: div._abm0 / div._aabw / div._aakw (outer video frame box above post footer)
+   * - Reels view: div._aaqg (outer reel card)
+   * - Posts (/p/) & Feed: div._aabw / div._abm0 / div._aakw / div.x5yr21d (video frame box above comments/footer)
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // 1. Reels view & Reel modals: attach to outer reel container
-    const reelContainer = video.closest('div._aaqg, div[role="dialog"]');
-    if (reelContainer) return reelContainer;
+    // 1. Instagram Reels (vertical reel card container)
+    const reelBox = video.closest('div._aaqg');
+    if (reelBox) return reelBox;
 
-    // 2. Feed Posts & /p/ post pages: attach to outer video frame container box above post footer
-    const postContainer = video.closest('div._abm0, div._aabw, div._aakw, div._aamv');
-    if (postContainer) return postContainer;
+    // 2. Posts (/p/ pages, feed posts, explore lightbox): target video frame box strictly above post footer
+    const mediaBox = video.closest('div._aabw, div._abm0, div._aakw, div._aamv, div.x5yr21d');
+    if (mediaBox) return mediaBox;
 
-    // 3. Fallback to parent element
+    // 3. Fallback to direct video parent element
     return video.parentElement;
   }
 

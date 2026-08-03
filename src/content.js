@@ -8,23 +8,14 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the most suitable parent container for the Instagram video element
-   * Supports: Reels view, Feed posts, Explore lightbox, and Stories clips
+   * Find the immediate video wrapper container for Instagram videos
+   * Ensures identical placement across Reels, Feed posts, Explore, and Stories
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
-
-    // Instagram Reel / Explore Modal Wrapper
-    const reelWrapper = video.closest('div._aaqg, div._aakw, div[role="dialog"]');
-    if (reelWrapper) return reelWrapper;
-
-    // Feed Post Video Wrapper
-    const postWrapper = video.closest('article, div._abm0, div._aacl');
-    if (postWrapper) return postWrapper;
-
-    // Fallback to direct parent
+    // Always attach to immediate video parent wrapper so docking & positioning are 100% identical
     return video.parentElement;
   }
 

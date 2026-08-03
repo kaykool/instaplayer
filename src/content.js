@@ -8,18 +8,24 @@
   const activePlayers = new WeakMap();
 
   /**
-   * Find the video media frame wrapper for Instagram videos
-   * Anchors player bar strictly to video box frame (above post footer / comments on /p/ pages)
+   * Find the optimal video container for Instagram videos
+   * - On Reels / Reel Modals: Attaches to div._aaqg / div[role="dialog"] above native click overlays
+   * - On Feed Posts / /p/ pages: Attaches to media box div._aabw / div._aamv above post footer
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
 
-    // Target immediate video media box wrapper across Reels, Feed Posts (/p/), Explore, and Stories
-    const mediaBox = video.closest('div._aabw, div._aamv, div._aaqg, div._aakw');
-    if (mediaBox) return mediaBox;
+    // 1. Reels view & Reel modals: attach to outer reel container
+    const reelContainer = video.closest('div._aaqg, div[role="dialog"]');
+    if (reelContainer) return reelContainer;
 
+    // 2. Feed Posts & /p/ post pages: attach to video media box above post footer
+    const postMediaBox = video.closest('div._aabw, div._aamv, div._aakw');
+    if (postMediaBox) return postMediaBox;
+
+    // 3. Fallback to parent element
     return video.parentElement;
   }
 

@@ -147,9 +147,10 @@ class InstaPlayerUI {
   bindEvents() {
     const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems } = this.elements;
 
-    // Helper to stop event propagation so Instagram click-to-pause handlers do not intercept control clicks
+    // Helper to stop event propagation and prevent default link redirection (e.g. main feed reel link redirection)
     const stopEvt = (e) => {
       if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
         if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
       }

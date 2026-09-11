@@ -10,21 +10,65 @@
   /**
    * Robust Multi-Tiered Container Resolver.
    * Resilient to Instagram CSS class renames/obfuscation.
+   * Resolves the common ancestor container wrapping both the <video>
+   * and its overlay/interactive layers, ensuring the player bar sits ON TOP.
    * Priority:
-   * 1. Semantic attributes (div[data-instancekey])
-   * 2. ARIA & HTML5 Semantic elements (article, div[role="dialog"], [role="region"])
-   * 3. Known CSS class selectors (div._aaqg, div._aabw, div._abm0, div._aakw)
-   * 4. Structural Computed Style Traversal (highest positioned parent wrapper)
+   * 1. Direct media container markers (div[data-instancekey])
+   * 2. Known card/media class selectors (div._aaqg, div._aabw, div._abm0, div._aakw)
+   * 3. Structural traversal: walks up to find the container enclosing video + overlays
+   *    without escaping into the outer document/feed/article bounds.
    * @param {HTMLVideoElement} video
    * @returns {HTMLElement}
    */
   function findVideoContainer(video) {
     if (!video) return null;
-    const container = video.closest('div[data-instancekey], article, div[role="dialog"], [role="region"], [role="presentation"], div._aaqg, div._aabw, div._abm0, div._aakw');
-    if (container) {
-      return container.querySelector('div[data-instancekey]') || container;
+
+    // 1. Direct Instagram media container markers
+    const instanceKeyBox = video.closest('div[data-instancekey]');
+    if (instanceKeyBox) return instanceKeyBox;
+
+    // 2. Known class selectors (legacy/fallback)
+    const knownClassContainer = video.closest('div._aaqg, div._aabw, div._abm0, div._aakw');
+    if (knownClassContainer) return knownClassContainer;
+
+    // 3. Structural traversal for Reels, Feed cards, and dynamic SPA containers:
+    // Walk up ancestors from video to find the container holding both video AND overlay elements
+    let current = video.parentElement;
+    let best = current;
+
+    while (
+      current &&
+      current !== current.ownerDocument.body &&
+      current.nodeName !== 'MAIN' &&
+      current.nodeName !== 'ARTICLE' &&
+      (!current.matches || !current.matches('div[role="dialog"]'))
+    ) {
+      // Stop if container holds multiple videos (reached feed list or reels scroll container)
+      if (current.querySelectorAll('video').length > 1) {
+        break;
+      }
+
+      // Check if current contains overlay or link elements that are siblings to the video branch
+      const hasOverlay = current.querySelector('a[href*="/reel/"], a[href*="/reels/"], button, [role="button"], [aria-label*="Audio"], [aria-label*="Volume"], [aria-label*="Mute"], [aria-label*="Like"]');
+      if (hasOverlay && current !== video.parentElement) {
+        best = current;
+        break;
+      }
+
+      // Track positioned wrappers as structural fallbacks
+      try {
+        const pos = current.ownerDocument.defaultView.getComputedStyle(current).position;
+        if (pos === 'relative' || pos === 'absolute') {
+          best = current;
+        }
+      } catch {
+        // Fallback for detached elements
+      }
+
+      current = current.parentElement;
     }
-    return video.parentElement;
+
+    return best || video.parentElement;
   }
 
   /**
@@ -75,34 +119,41 @@
     videos.forEach(processVideoNode);
   }
 
-  const debouncedScan = debounce(scanDOM, 100);
+  const debouncedScan = typeof debounce === 'function' ? debounce(scanDOM, 100) : scanDOM;
 
-  // MutationObserver for dynamic Instagram SPA updates & infinite scroll
-  const observer = new MutationObserver((mutations) => {
-    let hasAdditions = false;
-    mutations.forEach((mutation) => {
-      if (mutation.removedNodes && mutation.removedNodes.length > 0) {
-        handleRemovedNodes(mutation.removedNodes);
-      }
-      if (mutation.addedNodes && mutation.addedNodes.length > 0) {
-        hasAdditions = true;
-      }
-    });
+  // In browser extension runtime, observe mutations and scan initial DOM
+  if (typeof module === 'undefined' && typeof document !== 'undefined') {
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      const observer = new MutationObserver((mutations) => {
+        let hasAdditions = false;
+        mutations.forEach((mutation) => {
+          if (mutation.removedNodes && mutation.removedNodes.length > 0) {
+            handleRemovedNodes(mutation.removedNodes);
+          }
+          if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+            hasAdditions = true;
+          }
+        });
 
-    if (hasAdditions) {
-      debouncedScan();
+        if (hasAdditions) {
+          debouncedScan();
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
     }
-  });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', scanDOM);
+    } else {
+      scanDOM();
+    }
+  }
 
-  // Initial DOM Scan
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scanDOM);
-  } else {
-    scanDOM();
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { findVideoContainer, processVideoNode };
   }
 })();

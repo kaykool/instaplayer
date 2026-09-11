@@ -3,7 +3,8 @@
  */
 
 const CSS_TEXT = `
-      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 38px !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      :host { display: none !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 38px !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      :host([data-visible="true"]) { display: block !important; }
       .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
@@ -11,12 +12,10 @@ const CSS_TEXT = `
       .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 6px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
-      .ip-seeker::-webkit-slider-thumb:hover { transform: scale(1.2); }
-      .ip-seeker::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
-      .ip-seeker::-moz-range-thumb:hover { transform: scale(1.2); }
+      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; }
+      .ip-seeker::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer; }
       .ip-speed-wrapper { position: relative !important; pointer-events: auto !important; z-index: 2147483647 !important; }
-      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
+      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
       .ip-speed-menu.open { display: block; }
       .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
       .ip-speed-item:hover { background: rgba(255, 255, 255, 0.15); }
@@ -84,6 +83,9 @@ class InstaPlayerUI {
     this.videoPlayerWrapper = null;
     this.originalWrapperHeight = '';
     this.disabledOverlays = [];
+    this.parentContainer = null;
+    this.isHovered = false;
+    this.isVisible = null;
 
     this.ensureUnmuted();
 
@@ -113,14 +115,14 @@ class InstaPlayerUI {
   init(customContainer) {
     const parent = customContainer || this.video.parentElement;
     if (!parent) return false;
+    this.parentContainer = parent;
 
-    // Resilient multi-tiered lookup for Instagram video player wrapper (combining ARIA labels, semantic roles, class names, and DOM hierarchy)
-    this.videoPlayerWrapper = parent.querySelector('[aria-label="Video player"], [role="group"], [role="region"]') ||
-                              this.video.closest('[aria-label="Video player"]') ||
-                              this.video.closest('div.x5yr21d') ||
+    // Resilient lookup for Instagram video player wrapper directly from the video element
+    this.videoPlayerWrapper = this.video.closest('div.x5yr21d, [aria-label="Video player"]') ||
                               this.video.parentElement;
 
-    if (this.videoPlayerWrapper && this.videoPlayerWrapper !== parent) {
+    const isReel = typeof location !== 'undefined' && (location.pathname.includes('/reel') || location.pathname.includes('/reels'));
+    if (!isReel && this.videoPlayerWrapper && this.videoPlayerWrapper !== parent) {
       this.originalWrapperHeight = this.videoPlayerWrapper.style.height || '';
       this.videoPlayerWrapper.style.setProperty('height', 'calc(100% - 38px)', 'important');
     }
@@ -220,6 +222,14 @@ class InstaPlayerUI {
 
     // Define bound handlers for cleanup
     this.boundHandlers = {
+      parentEnter: () => {
+        this.isHovered = true;
+        this.updateVisibility();
+      },
+      parentLeave: () => {
+        this.isHovered = false;
+        this.updateVisibility();
+      },
       playClick: (e) => {
         stopEvt(e);
         if (this.video.paused) {
@@ -241,10 +251,12 @@ class InstaPlayerUI {
       seekerMousedown: (e) => {
         stopEvtNoPrevent(e);
         this.isUserSeeking = true;
+        this.updateVisibility();
       },
       seekerTouchstart: (e) => {
         stopEvtNoPrevent(e);
         this.isUserSeeking = true;
+        this.updateVisibility();
       },
       seekerInput: (e) => {
         stopEvtNoPrevent(e);
@@ -260,11 +272,13 @@ class InstaPlayerUI {
           this.video.currentTime = (parseFloat(seeker.value) / 100) * this.video.duration;
         }
         this.isUserSeeking = false;
+        this.updateVisibility();
       },
       cancelSeek: () => {
         // touchcancel fires without touchend/change; reset flag so time updates resume
         this.isUserSeeking = false;
         this.updateTimeState();
+        this.updateVisibility();
       },
       seekerClick: (e) => {
         stopEvt(e);
@@ -272,6 +286,7 @@ class InstaPlayerUI {
       speedBtnClick: (e) => {
         stopEvt(e);
         speedMenu.classList.toggle('open');
+        this.updateVisibility();
       },
       speedMenuClick: (e) => {
         const item = e.target.closest ? e.target.closest('.ip-speed-item') : null;
@@ -282,15 +297,20 @@ class InstaPlayerUI {
           this.targetPlaybackRate = rate;
           this.video.playbackRate = rate;
           speedMenu.classList.remove('open');
+          this.updateVisibility();
         }
       },
       documentClick: (e) => {
         if (this.host && !this.host.contains(e.target)) {
-          speedMenu.classList.remove('open');
+          if (speedMenu.classList.contains('open')) {
+            speedMenu.classList.remove('open');
+            this.updateVisibility();
+          }
         }
       },
       videoPlay: () => {
         this.updatePlayState();
+        this.updateVisibility();
         this.ensureUnmuted();
         if (this.targetPlaybackRate && this.video.playbackRate !== this.targetPlaybackRate) {
           try {
@@ -300,7 +320,10 @@ class InstaPlayerUI {
           }
         }
       },
-      videoPause: () => this.updatePlayState(),
+      videoPause: () => {
+        this.updatePlayState();
+        this.updateVisibility();
+      },
       videoVolume: () => this.updateMuteState(),
       videoTime: () => {
         this.updateTimeState();
@@ -309,6 +332,12 @@ class InstaPlayerUI {
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
     };
+
+    // Container Hover Listeners (reveals control bar on inactive/paused video card)
+    if (this.parentContainer) {
+      this.parentContainer.addEventListener('mouseenter', this.boundHandlers.parentEnter);
+      this.parentContainer.addEventListener('mouseleave', this.boundHandlers.parentLeave);
+    }
 
     // UI Listeners
     playBtn.addEventListener('click', this.boundHandlers.playClick);
@@ -330,6 +359,7 @@ class InstaPlayerUI {
     // Video Listeners
     this.video.addEventListener('play', this.boundHandlers.videoPlay);
     this.video.addEventListener('pause', this.boundHandlers.videoPause);
+    this.video.addEventListener('ended', this.boundHandlers.videoPause);
     this.video.addEventListener('volumechange', this.boundHandlers.videoVolume);
     this.video.addEventListener('timeupdate', this.boundHandlers.videoTime);
     this.video.addEventListener('durationchange', this.boundHandlers.videoDuration);
@@ -374,11 +404,23 @@ class InstaPlayerUI {
     }
   }
 
+  updateVisibility() {
+    if (!this.host) return;
+    const isPlaying = Boolean(this.video && !this.video.paused);
+    const isSpeedMenuOpen = Boolean(this.elements.speedMenu && this.elements.speedMenu.classList.contains('open'));
+    const shouldShow = Boolean(isPlaying || this.isHovered || this.isUserSeeking || isSpeedMenuOpen);
+    if (this.isVisible === shouldShow) return;
+    this.isVisible = shouldShow;
+    this.host.style.setProperty('display', shouldShow ? 'block' : 'none', 'important');
+    this.host.dataset.visible = shouldShow ? 'true' : 'false';
+  }
+
   updateAllStates() {
     this.updatePlayState();
     this.updateMuteState();
     this.updateTimeState();
     this.updateSpeedState();
+    this.updateVisibility();
   }
 
   destroy() {
@@ -410,6 +452,12 @@ class InstaPlayerUI {
     const { playBtn, muteBtn, seeker, speedBtn, speedMenu } = this.elements;
     const h = this.boundHandlers;
 
+    if (this.parentContainer) {
+      if (h.parentEnter) this.parentContainer.removeEventListener('mouseenter', h.parentEnter);
+      if (h.parentLeave) this.parentContainer.removeEventListener('mouseleave', h.parentLeave);
+      this.parentContainer = null;
+    }
+
     if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
     if (h.muteClick && muteBtn) muteBtn.removeEventListener('click', h.muteClick);
     if (seeker) {
@@ -420,8 +468,8 @@ class InstaPlayerUI {
         seeker.removeEventListener('change', h.commitSeek);
         seeker.removeEventListener('mouseup', h.commitSeek);
         seeker.removeEventListener('touchend', h.commitSeek);
-      if (h.cancelSeek) seeker.removeEventListener('touchcancel', h.cancelSeek);
       }
+      if (h.cancelSeek) seeker.removeEventListener('touchcancel', h.cancelSeek);
       if (h.seekerClick) seeker.removeEventListener('click', h.seekerClick);
     }
     if (h.speedBtnClick && speedBtn) speedBtn.removeEventListener('click', h.speedBtnClick);
@@ -431,6 +479,7 @@ class InstaPlayerUI {
     if (this.video && h.videoPlay) {
       this.video.removeEventListener('play', h.videoPlay);
       this.video.removeEventListener('pause', h.videoPause);
+      this.video.removeEventListener('ended', h.videoPause);
       this.video.removeEventListener('volumechange', h.videoVolume);
       this.video.removeEventListener('timeupdate', h.videoTime);
       this.video.removeEventListener('durationchange', h.videoDuration);

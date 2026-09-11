@@ -75,6 +75,6 @@ eocd.writeUInt16LE(central.length, 10);
 eocd.writeUInt32LE(cdBuf.length, 12);
 eocd.writeUInt32LE(offset, 16);
 
-const out = `instaplayer-v${version}.zip`;
+const out = `reelbar-v${version}.zip`;
 writeFileSync(out, Buffer.concat([...chunks, cdBuf, eocd]));
 console.log(`built ${out} (${files.length} files)`);

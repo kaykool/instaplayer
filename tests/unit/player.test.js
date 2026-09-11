@@ -77,4 +77,80 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
     expect(playerUI.host).toBeNull();
     expect(container.querySelector('.instaplayer-host')).toBeNull();
   });
+
+  describe('Low-overhead Visibility Control', () => {
+    it('initially hides control bar when video is paused and not hovered', () => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+
+      expect(playerUI.host.style.display).toBe('none');
+      expect(playerUI.host.dataset.visible).toBe('false');
+    });
+
+    it('shows control bar when video starts playing', () => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+      expect(playerUI.host.style.display).toBe('none');
+
+      Object.defineProperty(video, 'paused', { value: false, configurable: true });
+      video.dispatchEvent(new Event('play'));
+
+      expect(playerUI.host.style.display).toBe('block');
+      expect(playerUI.host.dataset.visible).toBe('true');
+    });
+
+    it('hides control bar when playing video is paused and not hovered', () => {
+      Object.defineProperty(video, 'paused', { value: false, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+      expect(playerUI.host.style.display).toBe('block');
+
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      video.dispatchEvent(new Event('pause'));
+
+      expect(playerUI.host.style.display).toBe('none');
+      expect(playerUI.host.dataset.visible).toBe('false');
+    });
+
+    it('reveals control bar on mouseenter of parent container and hides on mouseleave when paused', () => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+      expect(playerUI.host.style.display).toBe('none');
+
+      container.dispatchEvent(new MouseEvent('mouseenter'));
+      expect(playerUI.host.style.display).toBe('block');
+      expect(playerUI.host.dataset.visible).toBe('true');
+
+      container.dispatchEvent(new MouseEvent('mouseleave'));
+      expect(playerUI.host.style.display).toBe('none');
+      expect(playerUI.host.dataset.visible).toBe('false');
+    });
+
+    it('keeps control bar visible when actively scrubbing seek slider even if paused', () => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+      expect(playerUI.host.style.display).toBe('none');
+
+      playerUI.elements.seeker.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      expect(playerUI.host.style.display).toBe('block');
+      expect(playerUI.host.dataset.visible).toBe('true');
+
+      playerUI.elements.seeker.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(playerUI.host.style.display).toBe('none');
+    });
+
+    it('keeps control bar visible when speed menu is open even if paused', () => {
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+      const playerUI = new InstaPlayerUI(video);
+      expect(playerUI.host.style.display).toBe('none');
+
+      playerUI.elements.speedBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(playerUI.elements.speedMenu.classList.contains('open')).toBe(true);
+      expect(playerUI.host.style.display).toBe('block');
+      expect(playerUI.host.dataset.visible).toBe('true');
+
+      document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(playerUI.elements.speedMenu.classList.contains('open')).toBe(false);
+      expect(playerUI.host.style.display).toBe('none');
+    });
+  });
 });

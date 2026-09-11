@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="35%" stop-color="#7C3AED" />
+      <stop offset="70%" stop-color="#D946EF" />
+      <stop offset="100%" stop-color="#FF5940" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="url(#bgGrad)" />
+
+  <!-- Play Symbol with soft rounded corners -->
+  <path d="M 205 160 C 192 151 176 160 176 176 L 176 336 C 176 352 192 361 205 352 L 332 272 C 344 264 344 248 332 240 Z"
+        fill="#FFFFFF"
+        filter="url(#shadow)" />
+
+  <!-- Mini Seek Bar Indicator -->
+  <rect x="160" y="396" width="192" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.4" />
+  <rect x="160" y="396" width="115" height="18" rx="9" fill="#FFFFFF" />
+  <circle cx="275" cy="405" r="15" fill="#FFFFFF" filter="url(#shadow)" />
+</svg>

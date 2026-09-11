@@ -1,5 +1,5 @@
 {
-  "name": "instaplayer",
+  "name": "reelbar",
   "version": "1.0.0",
   "description": "> A lightweight, bare-minimum Chrome Extension that embeds a simple, easy-to-operate video player control bar directly onto Instagram Reels, Feed posts, Explore videos, and Stories.",
   "main": "index.js",
@@ -7,6 +7,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "vitest run",
+    "benchmark": "node scripts/benchmark-resource-diff.mjs",
     "package": "node scripts/package.mjs"
   },
   "repository": {

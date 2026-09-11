@@ -1,4 +1,4 @@
-# InstaPlayer
+# ReelBar
 
 Chrome extension that adds a video player control bar to Instagram Reels, Feed posts, Explore videos, and Stories.
 

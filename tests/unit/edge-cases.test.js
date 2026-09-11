@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { formatTime } from '../../src/utils.js';
+import { formatTime, debounce } from '../../src/utils.js';
 import InstaPlayerUI from '../../src/player.js';
 
 globalThis.formatTime = formatTime;
+globalThis.debounce = debounce;
+globalThis.InstaPlayerUI = InstaPlayerUI;
+
+import { findVideoContainer } from '../../src/content.js';
 
 describe('Real-World Instagram Edge Case Tests', () => {
   let container;
@@ -45,11 +49,11 @@ describe('Real-World Instagram Edge Case Tests', () => {
   it('Edge Case 3: Rapid Double Injection Guard (prevents multiple overlays on single video)', () => {
     video.dataset.instaplayerAttached = 'true';
 
-    const player1 = new InstaPlayerUI(video);
+    new InstaPlayerUI(video);
     expect(container.querySelectorAll('.instaplayer-host').length).toBe(1);
 
     // Second manual instantiation on same video
-    const player2 = new InstaPlayerUI(video);
+    new InstaPlayerUI(video);
     expect(container.querySelectorAll('.instaplayer-host').length).toBe(2);
   });
 
@@ -84,5 +88,58 @@ describe('Real-World Instagram Edge Case Tests', () => {
 
     expect(container.children.length).toBe(0);
     expect(player.host).toBeNull();
+  });
+
+  it('Edge Case 7: Dedicated Reels page resolves container enclosing native overlay', () => {
+    const reelSlide = document.createElement('div');
+    reelSlide.className = 'reel-slide-root';
+    reelSlide.style.position = 'relative';
+
+    const videoWrapper = document.createElement('div');
+    videoWrapper.setAttribute('role', 'presentation');
+    const reelVideo = document.createElement('video');
+    videoWrapper.appendChild(reelVideo);
+
+    const overlayLayer = document.createElement('div');
+    overlayLayer.className = 'reel-overlay-layer';
+    const audioBtn = document.createElement('button');
+    audioBtn.setAttribute('aria-label', 'Audio');
+    overlayLayer.appendChild(audioBtn);
+
+    reelSlide.appendChild(videoWrapper);
+    reelSlide.appendChild(overlayLayer);
+    document.body.appendChild(reelSlide);
+
+    const detected = findVideoContainer(reelVideo);
+    expect(detected).toBe(reelSlide);
+
+    const player = new InstaPlayerUI(reelVideo, detected);
+    expect(reelSlide.lastElementChild).toBe(player.host);
+    expect(player.host.style.zIndex).toBe('2147483647');
+  });
+
+  it('Edge Case 8: Feed post with Reel navigation link wraps link so host paints on top', () => {
+    const mediaBox = document.createElement('div');
+    mediaBox.className = 'feed-media-box';
+
+    const innerVideoBox = document.createElement('div');
+    innerVideoBox.setAttribute('role', 'presentation');
+    const feedVideo = document.createElement('video');
+    innerVideoBox.appendChild(feedVideo);
+
+    const linkOverlay = document.createElement('div');
+    const link = document.createElement('a');
+    link.href = '/reels/Dc----NRgmV/';
+    linkOverlay.appendChild(link);
+
+    mediaBox.appendChild(innerVideoBox);
+    mediaBox.appendChild(linkOverlay);
+    document.body.appendChild(mediaBox);
+
+    const detected = findVideoContainer(feedVideo);
+    expect(detected).toBe(mediaBox);
+
+    const player = new InstaPlayerUI(feedVideo, detected);
+    expect(mediaBox.lastElementChild).toBe(player.host);
   });
 });

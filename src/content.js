@@ -20,42 +20,11 @@
    */
   function findVideoContainer(video) {
     if (!video) return null;
-
-    // Tier 1 & 2: WAI-ARIA & Semantic HTML5 containers (article, post modals, reel views)
-    const semanticCard = video.closest('article, div[role="dialog"], [role="region"], [role="presentation"], div._aaqg, div._aabw, div._abm0, div._aakw');
-    if (semanticCard) {
-      const instanceKeyBox = semanticCard.querySelector('div[data-instancekey]');
-      if (instanceKeyBox) return instanceKeyBox;
-      return semanticCard;
+    const container = video.closest('div[data-instancekey], article, div[role="dialog"], [role="region"], [role="presentation"], div._aaqg, div._aabw, div._abm0, div._aakw');
+    if (container) {
+      return container.querySelector('div[data-instancekey]') || container;
     }
-
-    // Tier 3: Parent hierarchy traversal for data-instancekey or class matches
-    let current = video.parentElement;
-    let highestPositionedParent = video.parentElement;
-
-    while (current && current !== document.body) {
-      const instanceKeyBox = current.querySelector ? current.querySelector('div[data-instancekey]') : null;
-      if (instanceKeyBox) return instanceKeyBox;
-
-      if (current.matches && current.matches('div._aabw, div._abm0, div._aaqg, div._aakw')) {
-        return current;
-      }
-
-      // Track positioned containers (relative/absolute) as structural fallbacks
-      try {
-        const pos = window.getComputedStyle(current).position;
-        if (pos === 'relative' || pos === 'absolute' || pos === 'fixed') {
-          highestPositionedParent = current;
-        }
-      } catch {
-        // Fallback for detached elements
-      }
-
-      current = current.parentElement;
-    }
-
-    // Tier 4: Structural fallback to highest positioned parent or direct parent
-    return highestPositionedParent || video.parentElement;
+    return video.parentElement;
   }
 
   /**
@@ -86,12 +55,13 @@
     nodes.forEach((node) => {
       if (node.nodeType !== Node.ELEMENT_NODE) return;
 
-      const videos = node.matches && node.matches('video') ? [node] : (node.querySelectorAll ? node.querySelectorAll('video') : []);
+      const videos = node.nodeName === 'VIDEO' ? [node] : (node.getElementsByTagName ? Array.from(node.getElementsByTagName('video')) : []);
       videos.forEach((video) => {
         const player = activePlayers.get(video);
         if (player) {
           player.destroy();
           activePlayers.delete(video);
+          delete video.dataset.instaplayerAttached;
         }
       });
     });
@@ -101,7 +71,7 @@
    * Scan DOM for all video elements
    */
   function scanDOM() {
-    const videos = document.querySelectorAll('video');
+    const videos = document.querySelectorAll('video:not([data-instaplayer-attached])');
     videos.forEach(processVideoNode);
   }
 
@@ -127,24 +97,6 @@
   observer.observe(document.body, {
     childList: true,
     subtree: true
-  });
-
-  // Listen to Instagram SPA Navigation (pushState / replaceState / popstate)
-  const wrapHistoryMethod = (type) => {
-    const orig = history[type];
-    return function (...args) {
-      const result = orig.apply(this, args);
-      window.dispatchEvent(new Event('locationchange'));
-      return result;
-    };
-  };
-
-  history.pushState = wrapHistoryMethod('pushState');
-  history.replaceState = wrapHistoryMethod('replaceState');
-
-  window.addEventListener('popstate', () => window.dispatchEvent(new Event('locationchange')));
-  window.addEventListener('locationchange', () => {
-    setTimeout(scanDOM, 200);
   });
 
   // Initial DOM Scan

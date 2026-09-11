@@ -2,6 +2,69 @@
  * InstaPlayer Controller & Shadow DOM Builder
  */
 
+const CSS_TEXT = `
+      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 38px !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
+      .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
+      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 6px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
+      .ip-seeker::-webkit-slider-thumb:hover { transform: scale(1.2); }
+      .ip-seeker::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
+      .ip-seeker::-moz-range-thumb:hover { transform: scale(1.2); }
+      .ip-speed-wrapper { position: relative !important; pointer-events: auto !important; z-index: 2147483647 !important; }
+      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
+      .ip-speed-menu.open { display: block; }
+      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
+      .ip-speed-item:hover { background: rgba(255, 255, 255, 0.15); }
+      .ip-speed-item.active { font-weight: bold; color: #3897f0; }
+    `;
+const BAR_HTML = `
+      <button class="ip-btn ip-play-btn" title="Play/Pause" aria-label="Play or pause video">▶</button>
+      <button class="ip-btn ip-mute-btn" title="Mute/Unmute" aria-label="Mute or unmute video">🔊</button>
+      <span class="ip-time">0:00 / 0:00</span>
+      <div class="ip-seeker-container">
+        <input type="range" class="ip-seeker" min="0" max="100" value="0" step="0.1" aria-label="Seek progress">
+      </div>
+      <div class="ip-speed-wrapper">
+        <button class="ip-btn ip-speed-btn" title="Playback Speed" aria-label="Select playback speed">1x</button>
+        <div class="ip-speed-menu">
+          <button class="ip-speed-item" data-speed="0.25">0.25x</button>
+          <button class="ip-speed-item" data-speed="0.5">0.5x</button>
+          <button class="ip-speed-item" data-speed="0.75">0.75x</button>
+          <button class="ip-speed-item active" data-speed="1">1x</button>
+          <button class="ip-speed-item" data-speed="1.25">1.25x</button>
+          <button class="ip-speed-item" data-speed="1.5">1.5x</button>
+          <button class="ip-speed-item" data-speed="1.75">1.75x</button>
+          <button class="ip-speed-item" data-speed="2">2x</button>
+          <button class="ip-speed-item" data-speed="3">3x</button>
+        </div>
+      </div>
+    `;
+let sharedSheet = null;
+function getSharedSheet() {
+  if (!sharedSheet && typeof CSSStyleSheet !== 'undefined') {
+    try {
+      sharedSheet = new CSSStyleSheet();
+      sharedSheet.replaceSync(CSS_TEXT);
+    } catch {
+      sharedSheet = null;
+    }
+  }
+  return sharedSheet;
+}
+let barTemplate = null;
+function getBarTemplate() {
+  if (!barTemplate) {
+    barTemplate = document.createElement('template');
+    barTemplate.innerHTML = `<div class="ip-bar">${BAR_HTML}</div>`;
+  }
+  return barTemplate;
+}
+
 class InstaPlayerUI {
   /**
    * @param {HTMLVideoElement} videoElement
@@ -13,6 +76,8 @@ class InstaPlayerUI {
     this.shadow = null;
     this.elements = {};
     this.isUserSeeking = false;
+    this.lastTimeDisplay = null;
+    this.currentActiveRate = null;
     this.targetPlaybackRate = (typeof videoElement.playbackRate === 'number' && videoElement.playbackRate > 0) ? videoElement.playbackRate : 1;
     this.userExplicitlyUnmuted = true;
     this.boundHandlers = {};
@@ -20,12 +85,7 @@ class InstaPlayerUI {
     this.originalWrapperHeight = '';
     this.disabledOverlays = [];
 
-    // Attempt sound on start
-    try {
-      this.video.muted = false;
-    } catch {
-      // Ignore browser autoplay restriction
-    }
+    this.ensureUnmuted();
 
     if (!this.init(customContainer)) {
       return;
@@ -33,6 +93,16 @@ class InstaPlayerUI {
 
     this.bindEvents();
     this.updateAllStates();
+  }
+
+  ensureUnmuted() {
+    if (this.userExplicitlyUnmuted && this.video.muted) {
+      try {
+        this.video.muted = false;
+      } catch {
+        // Ignore browser autoplay restriction
+      }
+    }
   }
 
   /**
@@ -79,55 +149,18 @@ class InstaPlayerUI {
     // Attach Shadow DOM root
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    // Inject styles with maximum 32-bit integer z-index (2147483647)
-    const style = document.createElement('style');
-    style.textContent = `
-      :host { display: block !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 38px !important; z-index: 2147483647 !important; pointer-events: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
-      .ip-bar { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.12); box-sizing: border-box; color: #ffffff; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-btn { background: transparent; border: none; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 13px; line-height: 1; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-btn:hover { background: rgba(255, 255, 255, 0.15); }
-      .ip-btn:focus-visible, .ip-seeker:focus-visible, .ip-speed-item:focus-visible { outline: 2px solid #3897f0; outline-offset: 2px; }
-      .ip-time { font-size: 12px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); white-space: nowrap; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker-container { flex: 1; display: flex; align-items: center; margin: 0 6px; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-seeker::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
-      .ip-seeker::-webkit-slider-thumb:hover { transform: scale(1.2); }
-      .ip-seeker::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); transition: transform 0.1s ease; }
-      .ip-seeker::-moz-range-thumb:hover { transform: scale(1.2); }
-      .ip-speed-wrapper { position: relative !important; pointer-events: auto !important; z-index: 2147483647 !important; }
-      .ip-speed-menu { display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 6px; background: #121212; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 2147483647 !important; min-width: 64px; pointer-events: auto !important; }
-      .ip-speed-menu.open { display: block; }
-      .ip-speed-item { display: block; width: 100%; padding: 6px 12px; background: transparent; border: none; color: #ffffff; font-size: 12px; text-align: center; cursor: pointer; pointer-events: auto !important; position: relative !important; z-index: 2147483647 !important; }
-      .ip-speed-item:hover { background: rgba(255, 255, 255, 0.15); }
-      .ip-speed-item.active { font-weight: bold; color: #3897f0; }
-    `;
-    this.shadow.appendChild(style);
+    // Inject styles once per page (Constructable Stylesheets), fallback to <style> tag
+    const sheet = getSharedSheet();
+    if (sheet && this.shadow.adoptedStyleSheets) {
+      this.shadow.adoptedStyleSheets = [sheet];
+    } else {
+      const style = document.createElement('style');
+      style.textContent = CSS_TEXT;
+      this.shadow.appendChild(style);
+    }
 
-    // Build Bar UI Template
-    const bar = document.createElement('div');
-    bar.className = 'ip-bar';
-    bar.innerHTML = `
-      <button class="ip-btn ip-play-btn" title="Play/Pause" aria-label="Play or pause video">▶</button>
-      <button class="ip-btn ip-mute-btn" title="Mute/Unmute" aria-label="Mute or unmute video">🔊</button>
-      <span class="ip-time">0:00 / 0:00</span>
-      <div class="ip-seeker-container">
-        <input type="range" class="ip-seeker" min="0" max="100" value="0" step="0.1" aria-label="Seek progress">
-      </div>
-      <div class="ip-speed-wrapper">
-        <button class="ip-btn ip-speed-btn" title="Playback Speed" aria-label="Select playback speed">1x</button>
-        <div class="ip-speed-menu">
-          <button class="ip-speed-item" data-speed="0.25">0.25x</button>
-          <button class="ip-speed-item" data-speed="0.5">0.5x</button>
-          <button class="ip-speed-item" data-speed="0.75">0.75x</button>
-          <button class="ip-speed-item active" data-speed="1">1x</button>
-          <button class="ip-speed-item" data-speed="1.25">1.25x</button>
-          <button class="ip-speed-item" data-speed="1.5">1.5x</button>
-          <button class="ip-speed-item" data-speed="1.75">1.75x</button>
-          <button class="ip-speed-item" data-speed="2">2x</button>
-          <button class="ip-speed-item" data-speed="3">3x</button>
-        </div>
-      </div>
-    `;
+    // Build Bar UI via cloned template (parsed once)
+    const bar = getBarTemplate().content.firstElementChild.cloneNode(true);
 
     this.shadow.appendChild(bar);
 
@@ -153,24 +186,18 @@ class InstaPlayerUI {
   }
 
   bindEvents() {
-    const { playBtn, muteBtn, seeker, speedBtn, speedMenu, speedItems } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu } = this.elements;
 
-    // Helper to stop event propagation and prevent default link redirection
-    const stopEvt = (e) => {
+    // Helper to stop event propagation and prevent default link redirection.
+    // Pass prevent=false to allow native range slider input/focus.
+    const stopEvt = (e, prevent = true) => {
       if (e) {
-        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (prevent && typeof e.preventDefault === 'function') e.preventDefault();
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
         if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
       }
     };
-
-    // Helper to stop propagation without preventDefault (allows native range slider input/focus)
-    const stopEvtNoPrevent = (e) => {
-      if (e) {
-        if (typeof e.stopPropagation === 'function') e.stopPropagation();
-        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-      }
-    };
+    const stopEvtNoPrevent = (e) => stopEvt(e, false);
 
     // Host event traps using composedPath to accurately unmask retargeted Shadow DOM elements
     ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'contextmenu'].forEach((evtType) => {
@@ -198,23 +225,9 @@ class InstaPlayerUI {
         if (this.video.paused) {
           const promise = this.video.play();
           if (promise && typeof promise.then === 'function') {
-            promise.then(() => {
-              if (this.userExplicitlyUnmuted && this.video.muted) {
-                try {
-                  this.video.muted = false;
-                } catch {
-                  // Ignore
-                }
-              }
-            }).catch(() => {});
+            promise.then(() => this.ensureUnmuted()).catch(() => {});
           } else {
-            if (this.userExplicitlyUnmuted && this.video.muted) {
-              try {
-                this.video.muted = false;
-              } catch {
-                // Ignore
-              }
-            }
+            this.ensureUnmuted();
           }
         } else {
           this.video.pause();
@@ -237,7 +250,8 @@ class InstaPlayerUI {
         stopEvtNoPrevent(e);
         if (this.video.duration) {
           const targetTime = (parseFloat(seeker.value) / 100) * this.video.duration;
-          this.elements.timeLabel.textContent = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
+          this.lastTimeDisplay = `${formatTime(targetTime)} / ${formatTime(this.video.duration)}`;
+          this.elements.timeLabel.textContent = this.lastTimeDisplay;
         }
       },
       commitSeek: (e) => {
@@ -259,6 +273,17 @@ class InstaPlayerUI {
         stopEvt(e);
         speedMenu.classList.toggle('open');
       },
+      speedMenuClick: (e) => {
+        const item = e.target.closest ? e.target.closest('.ip-speed-item') : null;
+        if (!item || !speedMenu.contains(item)) return;
+        stopEvt(e);
+        const rate = parseFloat(item.dataset.speed);
+        if (rate > 0) {
+          this.targetPlaybackRate = rate;
+          this.video.playbackRate = rate;
+          speedMenu.classList.remove('open');
+        }
+      },
       documentClick: (e) => {
         if (this.host && !this.host.contains(e.target)) {
           speedMenu.classList.remove('open');
@@ -266,13 +291,7 @@ class InstaPlayerUI {
       },
       videoPlay: () => {
         this.updatePlayState();
-        if (this.userExplicitlyUnmuted && this.video.muted) {
-          try {
-            this.video.muted = false;
-          } catch {
-            // Ignore error
-          }
-        }
+        this.ensureUnmuted();
         if (this.targetPlaybackRate && this.video.playbackRate !== this.targetPlaybackRate) {
           try {
             this.video.playbackRate = this.targetPlaybackRate;
@@ -285,13 +304,7 @@ class InstaPlayerUI {
       videoVolume: () => this.updateMuteState(),
       videoTime: () => {
         this.updateTimeState();
-        if (this.userExplicitlyUnmuted && this.video.muted) {
-          try {
-            this.video.muted = false;
-          } catch {
-            // Ignore error
-          }
-        }
+        this.ensureUnmuted();
       },
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
@@ -310,18 +323,7 @@ class InstaPlayerUI {
     seeker.addEventListener('click', this.boundHandlers.seekerClick);
 
     speedBtn.addEventListener('click', this.boundHandlers.speedBtnClick);
-    this.speedItemHandlers = [];
-    speedItems.forEach((item) => {
-      const handler = (e) => {
-        stopEvt(e);
-        const rate = parseFloat(item.dataset.speed);
-        this.targetPlaybackRate = rate;
-        this.video.playbackRate = rate;
-        speedMenu.classList.remove('open');
-      };
-      this.speedItemHandlers.push({ item, handler });
-      item.addEventListener('click', handler);
-    });
+    speedMenu.addEventListener('click', this.boundHandlers.speedMenuClick);
 
     document.addEventListener('click', this.boundHandlers.documentClick);
 
@@ -352,22 +354,22 @@ class InstaPlayerUI {
       const percent = (this.video.currentTime / this.video.duration) * 100;
       this.elements.seeker.value = percent;
     }
-    this.elements.timeLabel.textContent = `${formatTime(this.video.currentTime)} / ${formatTime(this.video.duration)}`;
+    const display = `${formatTime(this.video.currentTime)} / ${formatTime(this.video.duration)}`;
+    if (display === this.lastTimeDisplay) return;
+    this.lastTimeDisplay = display;
+    this.elements.timeLabel.textContent = display;
   }
 
   updateSpeedState() {
     if (!this.elements.speedBtn) return;
     const currentRate = this.video.playbackRate;
     const displayRate = (typeof currentRate === 'number' && currentRate > 0) ? currentRate : (this.targetPlaybackRate || 1);
-
+    if (this.currentActiveRate === displayRate) return;
+    this.currentActiveRate = displayRate;
     this.elements.speedBtn.textContent = `${displayRate}x`;
     if (this.elements.speedItems) {
       this.elements.speedItems.forEach((item) => {
-        if (parseFloat(item.dataset.speed) === displayRate) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
+        item.classList.toggle('active', parseFloat(item.dataset.speed) === displayRate);
       });
     }
   }
@@ -405,7 +407,7 @@ class InstaPlayerUI {
       this.disabledOverlays = [];
     }
 
-    const { playBtn, muteBtn, seeker, speedBtn } = this.elements;
+    const { playBtn, muteBtn, seeker, speedBtn, speedMenu } = this.elements;
     const h = this.boundHandlers;
 
     if (h.playClick && playBtn) playBtn.removeEventListener('click', h.playClick);
@@ -423,11 +425,7 @@ class InstaPlayerUI {
       if (h.seekerClick) seeker.removeEventListener('click', h.seekerClick);
     }
     if (h.speedBtnClick && speedBtn) speedBtn.removeEventListener('click', h.speedBtnClick);
-    if (this.speedItemHandlers) {
-      this.speedItemHandlers.forEach(({ item, handler }) => {
-        item.removeEventListener('click', handler);
-      });
-    }
+    if (h.speedMenuClick && speedMenu) speedMenu.removeEventListener('click', h.speedMenuClick);
     if (h.documentClick) document.removeEventListener('click', h.documentClick);
 
     if (this.video && h.videoPlay) {

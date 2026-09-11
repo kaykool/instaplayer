@@ -42,7 +42,6 @@ Development follows a **PR-per-Milestone** workflow:
   ├── src/
   │   ├── content.js
   │   ├── player.js
-  │   ├── shadow-styles.css
   │   └── utils.js
   ```
 - [x] Create `manifest.json` targeting Manifest V3.
@@ -64,7 +63,7 @@ Development follows a **PR-per-Milestone** workflow:
 
 ### Milestone 3: Bare-Minimum Player Overlay UI
 - **Branch**: `feature/m3-bare-ui`
-- [x] Design minimal, flat CSS layout in `shadow-styles.css`.
+- [x] Design minimal, flat CSS layout (inline `<style>` in `src/player.js`).
 - [x] Build HTML template generator for control bar elements inside Shadow Root (Play/Pause, Mute, Time label, Seeker, Speed popup, Fullscreen).
 - [x] Build minimal floating Speed Popup menu.
 

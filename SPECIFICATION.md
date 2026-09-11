@@ -84,7 +84,7 @@ The player bar is rendered as a clean, high-contrast, flat docked overlay bar at
 
 ### 5.1 Extension Architecture
 * **Manifest Version**: Manifest V3 (`manifest.json`).
-* **Injection Strategy**: Content Script (`content.js` + `content.css`) matching `https://www.instagram.com/*`.
+* **Injection Strategy**: Content Script (`src/utils.js`, `src/player.js`, `src/content.js`) matching `https://www.instagram.com/*`.
 * **DOM Encapsulation**: Uses Shadow DOM (`Element.attachShadow({ mode: 'open' })`) to prevent Instagram styles from breaking the bare-minimum control bar.
 
 ### 5.2 Performance & Footprint

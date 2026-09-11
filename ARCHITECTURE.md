@@ -63,8 +63,8 @@ Because Instagram is a Single Page Application (SPA) built with React that frequ
   2. Renders minimal flat HTML structure and attaches control elements.
   3. Directs bidirectional event synchronization between HTML5 `<video>` properties and Shadow DOM controls.
 
-### 2.3 Style Encapsulation (`src/shadow-styles.css`)
-* **Role**: Complete CSS stylesheet loaded inside the Shadow Root.
+### 2.3 Style Encapsulation (inline `<style>` in `src/player.js`)
+* **Role**: Complete CSS stylesheet injected inside the Shadow Root. Single source of truth beside the markup it styles.
 * **Key Visual Design System**:
   * Background: Flat dark backdrop `rgba(0, 0, 0, 0.85)` or `#121212` for high readability.
   * Border Top: `1px solid rgba(255, 255, 255, 0.12)`.

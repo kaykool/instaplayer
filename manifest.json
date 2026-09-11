@@ -24,7 +24,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/shadow-styles.css",
         "icons/*"
       ],
       "matches": [

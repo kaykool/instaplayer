@@ -325,10 +325,7 @@ class InstaPlayerUI {
         this.updateVisibility();
       },
       videoVolume: () => this.updateMuteState(),
-      videoTime: () => {
-        this.updateTimeState();
-        this.ensureUnmuted();
-      },
+      videoTime: () => this.updateTimeState(),
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()
     };

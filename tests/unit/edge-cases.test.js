@@ -6,7 +6,7 @@ globalThis.formatTime = formatTime;
 globalThis.debounce = debounce;
 globalThis.InstaPlayerUI = InstaPlayerUI;
 
-import { findVideoContainer } from '../../src/content.js';
+import { findVideoContainer, processVideoNode } from '../../src/content.js';
 
 describe('Real-World Instagram Edge Case Tests', () => {
   let container;
@@ -141,5 +141,33 @@ describe('Real-World Instagram Edge Case Tests', () => {
 
     const player = new InstaPlayerUI(feedVideo, detected);
     expect(mediaBox.lastElementChild).toBe(player.host);
+  });
+
+  it('Edge Case 9: Container recycling or disconnected host triggers clean re-attachment', () => {
+    processVideoNode(video);
+    expect(video.dataset.instaplayerAttached).toBe('true');
+    const firstHost = container.querySelector('.instaplayer-host');
+    expect(firstHost).not.toBeNull();
+
+    // Simulate React recycling: remove host from DOM while video remains
+    firstHost.remove();
+    expect(firstHost.isConnected).toBe(false);
+
+    // Subsequent scan re-attaches new host
+    processVideoNode(video);
+    const secondHost = container.querySelector('.instaplayer-host');
+    expect(secondHost).not.toBeNull();
+    expect(secondHost).not.toBe(firstHost);
+
+    // Simulate reparenting: move video into a new container
+    const newContainer = document.createElement('div');
+    newContainer.className = '_aaqg';
+    document.body.appendChild(newContainer);
+    newContainer.appendChild(video);
+
+    processVideoNode(video);
+    const thirdHost = newContainer.querySelector('.instaplayer-host');
+    expect(thirdHost).not.toBeNull();
+    expect(container.querySelector('.instaplayer-host')).toBeNull();
   });
 });

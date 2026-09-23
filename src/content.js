@@ -76,10 +76,22 @@
    * @param {HTMLVideoElement} video
    */
   function processVideoNode(video) {
-    if (!video || video.dataset.instaplayerAttached) return;
+    if (!video) return;
 
     const container = findVideoContainer(video);
     if (!container) return;
+
+    if (video.dataset.instaplayerAttached) {
+      const existing = activePlayers.get(video);
+      if (existing && existing.host && existing.host.isConnected && existing.parentContainer === container) {
+        return;
+      }
+      if (existing) {
+        existing.destroy();
+        activePlayers.delete(video);
+      }
+      delete video.dataset.instaplayerAttached;
+    }
 
     video.dataset.instaplayerAttached = 'true';
     const playerUI = new InstaPlayerUI(video, container);
@@ -115,7 +127,7 @@
    * Scan DOM for all video elements
    */
   function scanDOM() {
-    const videos = document.querySelectorAll('video:not([data-instaplayer-attached])');
+    const videos = document.querySelectorAll('video');
     videos.forEach(processVideoNode);
   }
 

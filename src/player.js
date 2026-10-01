@@ -98,7 +98,8 @@ class InstaPlayerUI {
   }
 
   ensureUnmuted() {
-    if (this.userExplicitlyUnmuted && this.video.muted) {
+    if (!this.userExplicitlyUnmuted) return;
+    if (this.video && this.video.muted) {
       try {
         this.video.muted = false;
       } catch {
@@ -245,8 +246,11 @@ class InstaPlayerUI {
       },
       muteClick: (e) => {
         stopEvt(e);
-        this.video.muted = !this.video.muted;
-        this.userExplicitlyUnmuted = !this.video.muted;
+        // Record intent before mutating state: volumechange can fire
+        // synchronously and must not read a stale preference.
+        const nextMuted = !this.video.muted;
+        this.userExplicitlyUnmuted = !nextMuted;
+        this.video.muted = nextMuted;
       },
       seekerMousedown: (e) => {
         stopEvtNoPrevent(e);
@@ -324,7 +328,12 @@ class InstaPlayerUI {
         this.updatePlayState();
         this.updateVisibility();
       },
-      videoVolume: () => this.updateMuteState(),
+      videoVolume: () => {
+        this.updateMuteState();
+        // Instagram re-applies muted=true asynchronously after attach;
+        // undo it here instead of polling on timeupdate.
+        this.ensureUnmuted();
+      },
       videoTime: () => this.updateTimeState(),
       videoDuration: () => this.updateTimeState(),
       videoRate: () => this.updateSpeedState()

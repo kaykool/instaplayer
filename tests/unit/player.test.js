@@ -63,7 +63,8 @@ describe('InstaPlayerUI Component (src/player.js)', () => {
 
     expect(muteBtn.textContent).toBe('🔊');
 
-    video.muted = true;
+    // User-initiated mute: intent is recorded so volumechange cannot undo it.
+    muteBtn.click();
     video.dispatchEvent(new Event('volumechange'));
     expect(muteBtn.textContent).toBe('🔇');
   });

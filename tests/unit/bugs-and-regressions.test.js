@@ -102,4 +102,42 @@ describe('Bug Detection & Regression Prevention Tests', () => {
     video.dispatchEvent(new Event('play'));
     expect(video.muted).toBe(false);
   });
+
+  it('Bug Check 7: Unmutes a video that Instagram left muted at attach time', () => {
+    video.muted = true; // autoplay-policy default applied before the extension ran
+
+    const playerUI = new InstaPlayerUI(video);
+
+    expect(video.muted).toBe(false);
+    expect(playerUI.elements.muteBtn.textContent).toBe('🔊');
+  });
+
+  it('Bug Check 8: Retries do not override a user-initiated mute', () => {
+    video.muted = true;
+    const playerUI = new InstaPlayerUI(video);
+    const muteBtn = playerUI.elements.muteBtn;
+
+    muteBtn.click(); // user mutes
+    expect(video.muted).toBe(true);
+    expect(playerUI.userExplicitlyUnmuted).toBe(false);
+
+    video.dispatchEvent(new Event('play'));
+    video.dispatchEvent(new Event('volumechange'));
+    playerUI.ensureUnmuted();
+
+    expect(video.muted).toBe(true);
+  });
+
+  it('Bug Check 9: Re-unmutes when Instagram re-applies mute after attach', () => {
+    video.muted = true;
+    const playerUI = new InstaPlayerUI(video);
+    expect(video.muted).toBe(false);
+
+    // Instagram's own player mutes the element after the extension attached.
+    video.muted = true;
+    video.dispatchEvent(new Event('volumechange'));
+
+    expect(video.muted).toBe(false);
+    expect(playerUI.elements.muteBtn.textContent).toBe('🔊');
+  });
 });

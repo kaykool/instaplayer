@@ -8,6 +8,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 logs/
+.livetest-tmp/
+test-results/*.png
+scripts/auth-probe.mjs
+scripts/decrypt-cookies.mjs
+scripts/live-*.mjs
 
 # Operating System
 .DS_Store
